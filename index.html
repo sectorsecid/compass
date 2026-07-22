@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kompas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-top: #2a3542;
+    --bg-bot: #0b0f14;
+    --glass: #1b2530;
+    --glass-edge: rgba(255,255,255,0.08);
+    --amber: #ffb454;
+    --amber-soft: rgba(255,180,84,0.55);
+    --north-red: #ff5a3c;
+    --ink: #f2f4f6;
+    --ink-dim: #8b96a3;
+    --ink-faint: #5c6673;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; margin: 0; }
+
+  body {
+    background: radial-gradient(ellipse at 50% 0%, var(--bg-top) 0%, var(--bg-bot) 65%);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100svh;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 420px;
+    padding: 18px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .topbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .back {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    padding: 6px 4px;
+    cursor: pointer;
+  }
+  .back svg { width: 18px; height: 18px; }
+
+  .gear {
+    background: none;
+    border: none;
+    color: var(--ink-dim);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+  }
+  .gear svg { width: 20px; height: 20px; }
+
+  .headline {
+    text-align: center;
+    margin: 6px 0 18px;
+    font-weight: 700;
+    font-size: clamp(34px, 10vw, 44px);
+    letter-spacing: -0.01em;
+  }
+  .headline .cardinal-short { color: var(--ink); }
+
+  .compass-wrap {
+    position: relative;
+    width: min(80vw, 340px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 26%, #37455566 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, #232d38 0%, #141b23 60%, #0d1319 100%);
+    box-shadow:
+      0 0 0 1px var(--glass-edge),
+      0 0 0 8px rgba(255,255,255,0.015),
+      0 25px 60px rgba(0,0,0,0.6),
+      inset 0 2px 14px rgba(0,0,0,0.65),
+      inset 0 0 40px rgba(255,255,255,0.02);
+  }
+
+  .dial {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    transition: transform 0.15s ease-out;
+  }
+  .dial svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+  .needle-fixed {
+    position: absolute;
+    inset: 8px;
+    pointer-events: none;
+  }
+
+  .center-ball {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle at 32% 28%, #eef2f5, #b7bfc8 55%, #6b747d 100%);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.3);
+  }
+
+  .glass-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 25%, transparent 45%);
+    pointer-events: none;
+  }
+
+  .location { text-align: center; margin-top: 18px; }
+  .place { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .coords { font-size: 12.5px; color: var(--ink-faint); margin-top: 3px; }
+
+  .card {
+    width: 100%;
+    margin-top: 20px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #202a35 0%, #161e27 100%);
+    box-shadow: 0 0 0 1px var(--glass-edge), 0 14px 30px rgba(0,0,0,0.45);
+    overflow: hidden;
+  }
+
+  .card-tabs {
+    display: flex;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .card-tabs span {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0 8px;
+    border-bottom: 2px solid transparent;
+  }
+  .card-tabs span.active { color: var(--ink); border-bottom-color: var(--amber); }
+
+  .card-body { display: flex; align-items: center; padding: 14px 18px 18px; gap: 14px; }
+  .card-icon { width: 44px; height: 44px; flex-shrink: 0; }
+  .card-main { display: flex; flex-direction: column; }
+  .card-temp { font-size: 30px; font-weight: 700; line-height: 1; }
+  .card-desc { font-size: 13px; color: var(--ink-dim); margin-top: 5px; font-weight: 500; }
+
+  .card-side { margin-left: auto; text-align: right; font-size: 12.5px; color: var(--ink-dim); }
+  .card-side div { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-bottom: 6px; }
+  .card-side svg { width: 12px; height: 12px; opacity: 0.8; }
+
+  .status-line { margin-top: 14px; font-size: 11.5px; color: var(--ink-faint); text-align: center; max-width: 300px; }
+
+  button.perm {
+    margin-top: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #14202b;
+    background: linear-gradient(180deg, #ffcf8f, var(--amber));
+    border: none;
+    padding: 11px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  button.perm:active { transform: translateY(1px); }
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) { .dial { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <button class="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </button>
+    <button class="gear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="headline">
+    <span id="degreeValue">--</span>°<span class="cardinal-short" id="cardinalShort"> --</span>
+  </div>
+
+  <div class="compass-wrap">
+    <div class="dial" id="dial">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2.2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g id="fineTicks" stroke="#4a5563" stroke-width="0.6"></g>
+        <g font-family="Inter, sans-serif" font-weight="700" text-anchor="middle">
+          <text x="100" y="34" font-size="17" fill="#ff6a4a" filter="url(#glow)">N</text>
+          <text x="171" y="105" font-size="14" fill="#e7ebef">E</text>
+          <text x="100" y="176" font-size="14" fill="#e7ebef">S</text>
+          <text x="29" y="105" font-size="14" fill="#e7ebef">W</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="needle-fixed">
+      <svg viewBox="0 0 200 200" overflow="visible">
+        <defs>
+          <linearGradient id="needleRed" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ff6a4a"/>
+            <stop offset="100%" stop-color="#c33a24"/>
+          </linearGradient>
+          <linearGradient id="needleSilver" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#e7ebef"/>
+            <stop offset="100%" stop-color="#9aa4ad"/>
+          </linearGradient>
+          <filter id="needleShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000" flood-opacity="0.5"/>
+          </filter>
+        </defs>
+        <g filter="url(#needleShadow)">
+          <polygon points="100,18 105,100 100,90 95,100" fill="url(#needleRed)"/>
+          <polygon points="100,182 105,100 100,110 95,100" fill="url(#needleSilver)"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="glass-glare"></div>
+    <div class="center-ball"></div>
+  </div>
+
+  <div class="location">
+    <div class="place" id="weatherPlace">mencari lokasi…</div>
+    <div class="coords" id="coordsText">Lintang/Bujur: —</div>
+  </div>
+
+  <div class="status-line" id="statusText">Membuka akses sensor perangkat…</div>
+  <button id="permBtn" class="perm hidden">Aktifkan Kompas</button>
+
+  <div class="card">
+    <div class="card-tabs">
+      <span>Kompas</span>
+      <span class="active">Cuaca</span>
+    </div>
+    <div class="card-body">
+      <svg class="card-icon" id="weatherIcon" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="5" fill="#ffb454"/>
+      </svg>
+      <div class="card-main">
+        <div class="card-temp"><span id="weatherTemp">--</span>°C</div>
+        <div class="card-desc" id="weatherDesc">memuat data cuaca…</div>
+      </div>
+      <div class="card-side">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          <span id="weatherWind">--</span>
+        </div>
+        <div><span id="weatherHumidity">Kelembaban: --</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const dial = document.getElementById('dial');
+  const degreeValue = document.getElementById('degreeValue');
+  const cardinalShort = document.getElementById('cardinalShort');
+  const statusText = document.getElementById('statusText');
+  const permBtn = document.getElementById('permBtn');
+
+  const fineTicks = document.getElementById('fineTicks');
+  const cx = 100, cy = 100, rOuter = 92;
+
+  for (let deg = 0; deg < 360; deg += 6) {
+    if (deg % 30 === 0) continue;
+    const rad = (deg - 90) * Math.PI / 180;
+    const len = 5;
+    const x1 = cx + rOuter * Math.cos(rad);
+    const y1 = cy + rOuter * Math.sin(rad);
+    const x2 = cx + (rOuter - len) * Math.cos(rad);
+    const y2 = cy + (rOuter - len) * Math.sin(rad);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    fineTicks.appendChild(line);
+  }
+
+  function cardinalFromDeg(deg) {
+    const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+    const idx = Math.round(deg / 45) % 8;
+    return dirs[idx];
+  }
+
+  let smoothed = null;
+  function updateHeading(heading) {
+    if (heading == null || isNaN(heading)) return;
+    if (smoothed === null) smoothed = heading;
+    let delta = heading - (smoothed % 360);
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    smoothed += delta * 0.25;
+
+    const displayDeg = ((smoothed % 360) + 360) % 360;
+    dial.style.transform = `rotate(${-displayDeg}deg)`;
+    degreeValue.textContent = Math.round(displayDeg);
+    cardinalShort.textContent = " " + cardinalFromDeg(displayDeg);
+  }
+
+  function handleOrientation(event) {
+    let heading = null;
+    if (event.webkitCompassHeading !== undefined) {
+      heading = event.webkitCompassHeading;
+    } else if (event.alpha !== null) {
+      heading = 360 - event.alpha;
+    }
+    if (heading !== null) {
+      statusText.textContent = "";
+      updateHeading(heading);
+    }
+  }
+
+  function startListening() {
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    statusText.textContent = "Mencari sinyal sensor…";
+  }
+
+  function needsIOSPermission() {
+    return typeof DeviceOrientationEvent !== 'undefined' &&
+           typeof DeviceOrientationEvent.requestPermission === 'function';
+  }
+
+  if (needsIOSPermission()) {
+    statusText.textContent = "Perangkat ini butuh izin akses sensor gerak.";
+    permBtn.classList.remove('hidden');
+    permBtn.addEventListener('click', () => {
+      DeviceOrientationEvent.requestPermission().then(response => {
+        if (response === 'granted') {
+          permBtn.classList.add('hidden');
+          startListening();
+        } else {
+          statusText.textContent = "Izin ditolak. Aktifkan lewat pengaturan browser untuk memakai kompas.";
+        }
+      }).catch(() => {
+        statusText.textContent = "Gagal meminta izin sensor. Coba muat ulang halaman.";
+      });
+    });
+  } else if (window.DeviceOrientationEvent) {
+    startListening();
+    setTimeout(() => {
+      if (degreeValue.textContent === "--") {
+        statusText.textContent = "Sensor tidak terdeteksi. Buka lewat HTTPS di HP dengan magnetometer.";
+      }
+    }, 2500);
+  } else {
+    statusText.textContent = "Perangkat/browser ini tidak mendukung sensor orientasi.";
+  }
+
+  // ---------- weather ----------
+  const weatherPlace = document.getElementById('weatherPlace');
+  const coordsText = document.getElementById('coordsText');
+  const weatherTemp = document.getElementById('weatherTemp');
+  const weatherDesc = document.getElementById('weatherDesc');
+  const weatherWind = document.getElementById('weatherWind');
+  const weatherHumidity = document.getElementById('weatherHumidity');
+  const weatherIcon = document.getElementById('weatherIcon');
+
+  const weatherCodeMap = {
+    0: ["Cerah", sunIcon()],
+    1: ["Cerah berawan sebagian", sunCloudIcon()],
+    2: ["Berawan sebagian", sunCloudIcon()],
+    3: ["Mendung", cloudIcon()],
+    45: ["Berkabut", fogIcon()],
+    48: ["Kabut beku", fogIcon()],
+    51: ["Gerimis ringan", rainIcon()],
+    53: ["Gerimis", rainIcon()],
+    55: ["Gerimis lebat", rainIcon()],
+    56: ["Gerimis beku", rainIcon()],
+    57: ["Gerimis beku lebat", rainIcon()],
+    61: ["Hujan ringan", rainIcon()],
+    63: ["Hujan", rainIcon()],
+    65: ["Hujan lebat", rainIcon()],
+    66: ["Hujan beku", rainIcon()],
+    67: ["Hujan beku lebat", rainIcon()],
+    71: ["Salju ringan", snowIcon()],
+    73: ["Salju", snowIcon()],
+    75: ["Salju lebat", snowIcon()],
+    77: ["Butiran salju", snowIcon()],
+    80: ["Hujan lokal ringan", rainIcon()],
+    81: ["Hujan lokal", rainIcon()],
+    82: ["Hujan lokal deras", rainIcon()],
+    85: ["Salju lokal ringan", snowIcon()],
+    86: ["Salju lokal lebat", snowIcon()],
+    95: ["Badai petir", stormIcon()],
+    96: ["Badai petir + hujan es", stormIcon()],
+    99: ["Badai petir hebat", stormIcon()]
+  };
+
+  function sunIcon(){ return `<circle cx="12" cy="12" r="5" fill="#ffb454"/><g stroke="#ffb454" stroke-width="1.5"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.2" y1="4.2" x2="6" y2="6"/><line x1="18" y1="18" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="6" y2="18"/><line x1="18" y1="6" x2="19.8" y2="4.2"/></g>`; }
+  function sunCloudIcon(){ return `<circle cx="9" cy="9" r="4" fill="#ffb454"/><path d="M4 17a4 4 0 0 1 4-4c.3 0 .6 0 .9.1A5 5 0 0 1 18 15a3.5 3.5 0 0 1-.5 7H8a4 4 0 0 1-4-5z" fill="#c3ccd4"/>`; }
+  function cloudIcon(){ return `<path d="M5 17a4.5 4.5 0 0 1 4-6.7A5.5 5.5 0 0 1 19.5 12 3.75 3.75 0 0 1 19 19.4H7.5A4 4 0 0 1 5 17z" fill="#c3ccd4"/>`; }
+  function fogIcon(){ return `<g stroke="#c3ccd4" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="9" x2="21" y2="9"/><line x1="5" y1="13" x2="19" y2="13"/><line x1="3" y1="17" x2="21" y2="17"/></g>`; }
+  function rainIcon(){ return `<path d="M5 14a4.5 4.5 0 0 1 4-6.7A5.5 5.5 0 0 1 19.5 9 3.75 3.75 0 0 1 19 16.4H7.5A4 4 0 0 1 5 14z" fill="#c3ccd4"/><g stroke="#6fa3c9" stroke-width="1.6" stroke-linecap="round"><line x1="8" y1="19" x2="7" y2="22"/><line x1="12" y1="19" x2="11" y2="22"/><line x1="16" y1="19" x2="15" y2="22"/></g>`; }
+  function snowIcon(){ return `<path d="M5 14a4.5 4.5 0 0 1 4-6.7A5.5 5.5 0 0 1 19.5 9 3.75 3.75 0 0 1 19 16.4H7.5A4 4 0 0 1 5 14z" fill="#c3ccd4"/><g fill="#eef2f5"><circle cx="8" cy="20" r="1"/><circle cx="12" cy="21" r="1"/><circle cx="16" cy="20" r="1"/></g>`; }
+  function stormIcon(){ return `<path d="M5 13a4.5 4.5 0 0 1 4-6.7A5.5 5.5 0 0 1 19.5 8 3.75 3.75 0 0 1 19 15.4H7.5A4 4 0 0 1 5 13z" fill="#c3ccd4"/><polygon points="13,15 9,20 12,20 10,24 16,18 13,18" fill="#ffb454"/>`; }
+
+  function renderWeather(data, placeName) {
+    const c = data.current;
+    const info = weatherCodeMap[c.weather_code] || ["Kondisi tidak diketahui", cloudIcon()];
+    weatherTemp.textContent = Math.round(c.temperature_2m);
+    weatherDesc.textContent = info[0];
+    weatherIcon.innerHTML = info[1];
+    weatherWind.textContent = Math.round(c.wind_speed_10m) + " km/j";
+    weatherHumidity.textContent = "Kelembaban: " + Math.round(c.relative_humidity_2m) + "%";
+    weatherPlace.textContent = placeName;
+  }
+
+  function fetchWeather(lat, lon, placeName) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => renderWeather(data, placeName))
+      .catch(() => {
+        weatherDesc.textContent = "Gagal memuat data cuaca.";
+        weatherPlace.textContent = "—";
+      });
+  }
+
+  function reverseGeocode(lat, lon) {
+    const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=id&count=1`;
+    return fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data.results && data.results.length) {
+          const r = data.results[0];
+          return r.name + (r.admin1 ? ", " + r.admin1 : "");
+        }
+        return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      })
+      .catch(() => `${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const latLabel = latitude >= 0 ? "U" : "S";
+        const lonLabel = longitude >= 0 ? "T" : "B";
+        coordsText.textContent = `Lintang/Bujur: ${Math.abs(latitude).toFixed(4)}° ${latLabel}, ${Math.abs(longitude).toFixed(4)}° ${lonLabel}`;
+        reverseGeocode(latitude, longitude).then(placeName => {
+          fetchWeather(latitude, longitude, placeName);
+        });
+      },
+      () => {
+        weatherDesc.textContent = "Izin lokasi ditolak.";
+        weatherPlace.textContent = "—";
+        coordsText.textContent = "Lintang/Bujur: —";
+      },
+      { timeout: 10000 }
+    );
+  } else {
+    weatherDesc.textContent = "Geolokasi tidak didukung.";
+  }
+</script>
+</body>
+</html>
