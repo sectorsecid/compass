@@ -1,451 +1,466 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
-<title>Kompas — Instrumen Arah &amp; Kiblat</title>
+<title>Compass — Heading &amp; Qibla Instrument</title>
 <style>
   :root{
-    --brass:#c9a15a;
-    --brass-bright:#e8c98a;
-    --bg-deep:#0d2b2e;
-    --bg-deep-2:#0a2124;
-    --card:#123437;
-    --card-2:#0f2c2f;
-    --ink:#eaf3f2;
-    --ink-dim:#9fb8b7;
-    --line:rgba(201,161,90,0.28);
-    --danger:#d97757;
-    --ok:#7fbfa0;
-    --shadow: 0 20px 50px rgba(0,0,0,0.45);
-    --radius:22px;
-    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --bg:#eef1f8;
+    --bg-2:#dfe5f3;
+    --panel: rgba(255,255,255,0.62);
+    --panel-solid:#ffffff;
+    --panel-border: rgba(30,41,74,0.10);
+    --ink:#151b2e;
+    --ink-dim:#5c6480;
+    --indigo:#3e56d9;
+    --indigo-bright:#6f83ff;
+    --coral:#ff6a55;
+    --mint:#2fbf8f;
+    --shadow: 0 24px 60px rgba(30,41,74,0.16);
+    --radius:26px;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
   }
-  [data-theme="light"]{
-    --bg-deep:#eef2ee;
-    --bg-deep-2:#e2e9e1;
-    --card:#ffffff;
-    --card-2:#f5f7f4;
-    --ink:#14302f;
-    --ink-dim:#5a706d;
-    --line:rgba(20,48,47,0.14);
-    --shadow: 0 16px 40px rgba(20,48,47,0.12);
+  [data-theme="dark"]{
+    --bg:#0b0f1c;
+    --bg-2:#050810;
+    --panel: rgba(255,255,255,0.045);
+    --panel-solid:#12172a;
+    --panel-border: rgba(255,255,255,0.09);
+    --ink:#eef1fb;
+    --ink-dim:#8890ac;
+    --shadow: 0 24px 60px rgba(0,0,0,0.5);
   }
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
   body{
     margin:0;
     min-height:100vh;
-    font-family: "Georgia", "Iowan Old Style", serif;
-    background:
-      radial-gradient(circle at 20% -10%, rgba(201,161,90,0.10), transparent 45%),
-      linear-gradient(160deg, var(--bg-deep), var(--bg-deep-2));
+    font-family:var(--sans);
     color:var(--ink);
-    -webkit-tap-highlight-color: transparent;
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(62,86,217,0.16), transparent 55%),
+      radial-gradient(900px 500px at 100% 0%, rgba(255,106,85,0.10), transparent 50%),
+      linear-gradient(180deg, var(--bg), var(--bg-2));
     transition: background .4s ease, color .4s ease;
   }
-  .wrap{
-    max-width:520px;
+  .app{
+    max-width:480px;
     margin:0 auto;
-    padding:20px 18px 48px;
+    padding:22px 18px 40px;
     min-height:100vh;
   }
-  header.top{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    margin-bottom:18px;
-  }
-  .brand{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
-  .brand .eyebrow{
-    font-family:var(--mono);
-    font-size:10.5px;
-    letter-spacing:.28em;
-    text-transform:uppercase;
-    color:var(--brass);
-  }
-  .brand h1{
-    margin:2px 0 0;
-    font-size:26px;
-    font-weight:400;
-    letter-spacing:.02em;
-  }
-  .brand h1 em{
-    font-style:italic;
-    color:var(--brass-bright);
-  }
-  .iconbtn{
-    width:42px;height:42px;
-    border-radius:50%;
-    border:1px solid var(--line);
-    background:var(--card);
-    color:var(--ink);
-    display:flex;align-items:center;justify-content:center;
-    cursor:pointer;
-    box-shadow: var(--shadow);
-    transition: transform .2s ease, background .3s ease;
-    font-size:18px;
-  }
-  .iconbtn:active{ transform:scale(0.92); }
 
-  .status-banner{
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .wordmark{ display:flex; flex-direction:column; }
+  .wordmark .kicker{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    font-weight:600;
+  }
+  .wordmark h1{
+    margin:3px 0 0;
+    font-size:25px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .theme-pill{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    border-radius:999px;
+    padding:6px 6px;
+    box-shadow:var(--shadow);
+  }
+  .theme-pill button{
+    width:32px;height:32px;
+    border-radius:50%;
+    border:none;
+    background:transparent;
+    color:var(--ink-dim);
+    font-size:15px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition: all .25s ease;
+  }
+  .theme-pill button.active{
+    background:linear-gradient(140deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    box-shadow:0 6px 16px rgba(62,86,217,0.4);
+  }
+
+  /* ---- Status ---- */
+  .status{
+    display:none;
     font-family:var(--mono);
     font-size:12px;
-    line-height:1.5;
-    padding:10px 14px;
-    border-radius:12px;
-    background:var(--card-2);
-    border:1px solid var(--line);
+    line-height:1.55;
+    padding:11px 14px;
+    border-radius:14px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
     color:var(--ink-dim);
     margin-bottom:16px;
-    display:none;
   }
-  .status-banner.show{display:block;}
-  .status-banner.warn{ border-color:rgba(217,119,87,0.45); color:var(--danger); }
-  .status-banner.ok{ border-color:rgba(127,191,160,0.4); color:var(--ok); }
+  .status.show{display:block;}
+  .status.warn{ color:var(--coral); border-color:rgba(255,106,85,0.4); }
+  .status.ok{ color:var(--mint); border-color:rgba(47,191,143,0.4); }
 
-  .stage{
-    position:relative;
-    background:
-      radial-gradient(circle at 50% 38%, rgba(201,161,90,0.08), transparent 60%),
-      var(--card);
-    border-radius:var(--radius);
-    border:1px solid var(--line);
-    box-shadow:var(--shadow);
-    padding:26px 18px 20px;
+  /* ---- Segmented control ---- */
+  .segmented{
     display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:14px;
-  }
-
-  .compass-shell{
-    position:relative;
-    width:min(78vw, 320px);
-    aspect-ratio:1/1;
-  }
-  .compass-shell svg{ width:100%; height:100%; display:block; }
-  .rose{
-    transform-origin:50% 50%;
-    transition: transform .35s cubic-bezier(.22,.8,.32,1);
-  }
-  .needle-group{
-    transform-origin:50% 50%;
-    transition: transform .35s cubic-bezier(.22,.8,.32,1);
-  }
-  .qibla-arrow{
-    transform-origin:50% 50%;
-    transition: transform .4s cubic-bezier(.22,.8,.32,1);
-  }
-  .center-readout{
-    position:absolute;
-    top:50%;left:50%;
-    transform:translate(-50%,-50%);
-    text-align:center;
-    pointer-events:none;
-  }
-  .center-readout .deg{
-    font-family:var(--mono);
-    font-size:34px;
-    font-weight:600;
-    letter-spacing:-.01em;
-  }
-  .center-readout .dir{
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.24em;
-    color:var(--brass);
-    margin-top:2px;
-  }
-
-  .mode-toggle{
-    display:flex;
-    width:100%;
-    background:var(--card-2);
-    border-radius:14px;
-    padding:4px;
-    border:1px solid var(--line);
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:5px;
     gap:4px;
+    margin-bottom:18px;
   }
-  .mode-toggle button{
+  .segmented button{
     flex:1;
     border:none;
     background:transparent;
     color:var(--ink-dim);
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    padding:10px 6px;
-    border-radius:10px;
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:600;
+    padding:11px 6px;
+    border-radius:12px;
     cursor:pointer;
     transition: all .25s ease;
   }
-  .mode-toggle button.active{
-    background:linear-gradient(180deg, var(--brass-bright), var(--brass));
-    color:#20241a;
-    font-weight:600;
-    box-shadow: 0 6px 16px rgba(201,161,90,0.35);
+  .segmented button.active{
+    background:linear-gradient(140deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    box-shadow: 0 8px 20px rgba(62,86,217,0.35);
+  }
+
+  /* ---- Instrument stage ---- */
+  .stage{
+    position:relative;
+    background:var(--panel);
+    backdrop-filter:blur(20px);
+    border-radius:var(--radius);
+    border:1px solid var(--panel-border);
+    box-shadow:var(--shadow);
+    padding:30px 16px 22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    overflow:hidden;
+  }
+  .stage::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: radial-gradient(circle at 50% 20%, rgba(111,131,255,0.14), transparent 60%);
+    pointer-events:none;
+  }
+
+  .dial-wrap{
+    position:relative;
+    width:min(76vw, 300px);
+    aspect-ratio:1/1;
+  }
+  .accuracy-halo{
+    position:absolute;
+    inset:-6%;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(47,191,143,0.16), transparent 70%);
+    transform:scale(1);
+    transition: transform .6s ease, opacity .6s ease;
+    opacity:0.7;
+  }
+  .dial-wrap svg{ position:relative; width:100%; height:100%; display:block; }
+
+  .rose{ transform-origin:50% 50%; transition: transform .35s cubic-bezier(.22,.8,.32,1); }
+  .qibla-arrow{ transform-origin:50% 50%; transition: transform .4s cubic-bezier(.22,.8,.32,1); }
+
+  .readout{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    pointer-events:none;
+  }
+  .readout .deg{
+    font-family:var(--mono);
+    font-size:36px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .readout .dir{
+    font-family:var(--sans);
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    margin-top:2px;
   }
 
   .qibla-info{
     display:none;
     width:100%;
     text-align:center;
-    font-family:var(--mono);
-    font-size:12.5px;
+    font-size:13px;
     color:var(--ink-dim);
-    padding-top:2px;
   }
   .qibla-info.show{display:block;}
-  .qibla-info b{ color:var(--brass-bright); font-size:16px; }
+  .qibla-info b{ color:var(--ink); font-family:var(--mono); font-size:16px; font-weight:700; }
 
-  .calibrate-btn{
+  .calibrate{
     width:100%;
-    margin-top:2px;
-    padding:12px;
-    border-radius:12px;
-    border:1px solid var(--line);
-    background:transparent;
-    color:var(--ink);
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
+    padding:14px;
+    border-radius:16px;
+    border:none;
+    background:linear-gradient(140deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.01em;
     cursor:pointer;
-    transition: background .25s ease;
+    box-shadow: 0 12px 26px rgba(62,86,217,0.35);
+    transition: transform .15s ease;
   }
-  .calibrate-btn:active{ background:var(--card-2); }
+  .calibrate:active{ transform:scale(0.97); }
 
+  /* ---- Data grid ---- */
   .grid{
     margin-top:16px;
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:10px;
   }
-  .data-tile{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:12px 14px;
-    box-shadow:var(--shadow);
+  .tile{
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:13px 14px;
   }
-  .data-tile .label{
+  .tile.wide{ grid-column:1/-1; display:flex; align-items:center; gap:10px; }
+  .tile .label{
     font-family:var(--mono);
-    font-size:10px;
-    letter-spacing:.18em;
+    font-size:9.5px;
+    letter-spacing:.16em;
     text-transform:uppercase;
-    color:var(--brass);
+    color:var(--indigo-bright);
     margin-bottom:4px;
   }
-  .data-tile .value{
+  .tile .value{
     font-family:var(--mono);
-    font-size:15px;
-    color:var(--ink);
+    font-size:14.5px;
     word-break:break-word;
   }
-  .data-tile.wide{ grid-column: 1 / -1; }
-
-  .location-line{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    font-family:var(--mono);
-    font-size:13px;
-  }
-  .location-line .dot{
-    width:7px;height:7px;border-radius:50%;
-    background:var(--ok);
+  .pulse-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--mint);
     flex:none;
-    box-shadow:0 0 0 3px rgba(127,191,160,0.18);
+    box-shadow:0 0 0 4px rgba(47,191,143,0.16);
   }
 
-  .helptext{
+  /* ---- Help ---- */
+  .help{
     margin-top:18px;
-    padding:14px 16px;
-    border-radius:14px;
-    background:var(--card-2);
-    border:1px dashed var(--line);
+    padding:15px 16px;
+    border-radius:16px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px dashed var(--panel-border);
     font-size:13px;
     line-height:1.6;
     color:var(--ink-dim);
   }
-  .helptext strong{ color:var(--ink); }
-  .helptext summary{
+  .help summary{
     cursor:pointer;
     font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:.12em;
+    font-size:10.5px;
+    letter-spacing:.14em;
     text-transform:uppercase;
-    color:var(--brass);
+    color:var(--indigo-bright);
+    font-weight:700;
     margin-bottom:6px;
   }
-  .helptext ol{ margin:8px 0 0; padding-left:20px; }
-  .helptext li{ margin-bottom:6px; }
+  .help strong{ color:var(--ink); }
+  .help ol{ margin:8px 0 0; padding-left:20px; }
+  .help li{ margin-bottom:6px; }
 
-  footer.foot{
+  .foot{
     text-align:center;
     font-family:var(--mono);
-    font-size:10.5px;
-    letter-spacing:.1em;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
     color:var(--ink-dim);
     margin-top:22px;
-    opacity:.7;
+    opacity:.65;
   }
 
   @media (max-width:380px){
-    .brand h1{ font-size:22px; }
-    .center-readout .deg{ font-size:28px; }
+    .wordmark h1{ font-size:21px; }
+    .readout .deg{ font-size:29px; }
   }
 </style>
 </head>
-<body data-theme="dark">
-<div class="wrap">
+<body data-theme="light">
+<div class="app">
 
-  <header class="top">
-    <div class="brand">
-      <span class="eyebrow">Instrumen Navigasi</span>
-      <h1>Ko<em>mpas</em></h1>
+  <div class="topbar">
+    <div class="wordmark">
+      <span class="kicker">Heading Instrument</span>
+      <h1>Compass</h1>
     </div>
-    <button class="iconbtn" id="themeBtn" title="Mode Malam/Gelap" aria-label="Ganti tema">🌙</button>
-  </header>
+    <div class="theme-pill">
+      <button id="lightBtn" class="active" title="Light mode" aria-label="Light mode">☀️</button>
+      <button id="darkBtn" title="Dark mode" aria-label="Dark mode">🌙</button>
+    </div>
+  </div>
 
-  <div class="status-banner" id="statusBanner"></div>
+  <div class="status" id="statusBanner"></div>
+
+  <div class="segmented">
+    <button id="btnCompassMode" class="active">Compass</button>
+    <button id="btnQiblaMode">Qibla Direction</button>
+  </div>
 
   <div class="stage">
-    <div class="compass-shell">
+    <div class="dial-wrap">
+      <div class="accuracy-halo" id="accuracyHalo"></div>
       <svg viewBox="0 0 300 300">
         <defs>
-          <radialGradient id="faceGrad" cx="50%" cy="42%" r="70%">
-            <stop offset="0%" stop-color="var(--card-2)"/>
-            <stop offset="100%" stop-color="var(--card)"/>
+          <radialGradient id="faceGrad" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="var(--panel-solid)" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="var(--panel-solid)" stop-opacity="0.55"/>
           </radialGradient>
           <linearGradient id="needleN" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#d97757"/>
-            <stop offset="100%" stop-color="#a9502f"/>
+            <stop offset="0%" stop-color="#ff6a55"/>
+            <stop offset="100%" stop-color="#c9432f"/>
           </linearGradient>
           <linearGradient id="needleS" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stop-color="#e8e8e8"/>
-            <stop offset="100%" stop-color="#9aa3a3"/>
+            <stop offset="0%" stop-color="#c9d0e6"/>
+            <stop offset="100%" stop-color="#8a91ab"/>
           </linearGradient>
           <linearGradient id="qiblaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#e8c98a"/>
-            <stop offset="100%" stop-color="#c9a15a"/>
+            <stop offset="0%" stop-color="#6f83ff"/>
+            <stop offset="100%" stop-color="#3e56d9"/>
           </linearGradient>
         </defs>
 
-        <!-- Outer ring -->
-        <circle cx="150" cy="150" r="144" fill="url(#faceGrad)" stroke="var(--line)" stroke-width="2"/>
-        <circle cx="150" cy="150" r="126" fill="none" stroke="var(--line)" stroke-width="1"/>
+        <circle cx="150" cy="150" r="144" fill="url(#faceGrad)" stroke="var(--panel-border)" stroke-width="2"/>
+        <circle cx="150" cy="150" r="126" fill="none" stroke="var(--panel-border)" stroke-width="1"/>
 
-        <!-- Rotating rose: ticks + degree labels + cardinal letters -->
         <g class="rose" id="rose">
           <g id="ticks"></g>
-          <g id="cardinals" font-family="SFMono-Regular, Consolas, monospace" font-weight="700" text-anchor="middle">
-            <text x="150" y="38" font-size="20" fill="#d97757">U</text>
-            <text x="150" y="270" font-size="16" fill="var(--ink-dim)">S</text>
-            <text x="262" y="156" font-size="16" fill="var(--ink-dim)">T</text>
-            <text x="38" y="156" font-size="16" fill="var(--ink-dim)">B</text>
+          <g id="cardinals" font-family="ui-monospace, monospace" font-weight="800" text-anchor="middle">
+            <text x="150" y="38" font-size="19" fill="#ff6a55">N</text>
+            <text x="150" y="270" font-size="15" fill="var(--ink-dim)">S</text>
+            <text x="262" y="156" font-size="15" fill="var(--ink-dim)">E</text>
+            <text x="38" y="156" font-size="15" fill="var(--ink-dim)">W</text>
           </g>
         </g>
 
-        <!-- Fixed needle (points to device heading direction, since rose rotates opposite) -->
         <g class="needle-group" id="needleGroup">
           <path d="M150,42 L162,150 L150,140 L138,150 Z" fill="url(#needleN)"/>
           <path d="M150,258 L162,150 L150,160 L138,150 Z" fill="url(#needleS)"/>
-          <circle cx="150" cy="150" r="9" fill="var(--brass)" stroke="var(--card)" stroke-width="2"/>
+          <circle cx="150" cy="150" r="9" fill="var(--indigo)" stroke="var(--panel-solid)" stroke-width="2"/>
         </g>
 
-        <!-- Qibla arrow, hidden unless qibla mode active -->
         <g class="qibla-arrow" id="qiblaArrow" style="display:none;">
-          <path d="M150,20 L165,60 L150,50 L135,60 Z" fill="url(#qiblaGrad)"/>
-          <line x1="150" y1="20" x2="150" y2="150" stroke="url(#qiblaGrad)" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>
-          <circle cx="150" cy="20" r="5" fill="#e8c98a"/>
+          <path d="M150,18 L166,58 L150,48 L134,58 Z" fill="url(#qiblaGrad)"/>
+          <line x1="150" y1="18" x2="150" y2="150" stroke="url(#qiblaGrad)" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+          <circle cx="150" cy="18" r="5" fill="#6f83ff"/>
         </g>
 
-        <!-- fixed top pointer marker -->
-        <polygon points="150,4 156,18 144,18" fill="var(--brass)"/>
+        <polygon points="150,4 156,18 144,18" fill="var(--indigo)"/>
       </svg>
 
-      <div class="center-readout">
+      <div class="readout">
         <div class="deg" id="degReadout">--°</div>
-        <div class="dir" id="dirReadout">MENUNGGU SENSOR</div>
+        <div class="dir" id="dirReadout">Awaiting Sensor</div>
       </div>
-    </div>
-
-    <div class="mode-toggle">
-      <button id="btnCompassMode" class="active">Kompas</button>
-      <button id="btnQiblaMode">Arah Kiblat</button>
     </div>
 
     <div class="qibla-info" id="qiblaInfo">
-      Arah Kiba menuju Ka'bah: <b id="qiblaDeg">--°</b> dari Utara &nbsp;•&nbsp; Selisih dari hadapan Anda: <b id="qiblaDiff">--°</b>
+      Qibla bearing to the Kaaba: <b id="qiblaDeg">--°</b> from True North &nbsp;•&nbsp; Offset from your heading: <b id="qiblaDiff">--°</b>
     </div>
 
-    <button class="calibrate-btn" id="calibrateBtn">🧭 Mulai / Kalibrasi Sensor</button>
+    <button class="calibrate" id="calibrateBtn">Start / Calibrate Sensors</button>
   </div>
 
   <div class="grid">
-    <div class="data-tile wide">
-      <div class="label">Lokasi</div>
-      <div class="location-line">
-        <span class="dot" id="locDot"></span>
-        <span class="value" id="cityValue">Belum diketahui</span>
+    <div class="tile wide">
+      <span class="pulse-dot"></span>
+      <div>
+        <div class="label">Location</div>
+        <div class="value" id="cityValue">Not detected yet</div>
       </div>
     </div>
-    <div class="data-tile">
-      <div class="label">Lintang (Lat)</div>
+    <div class="tile">
+      <div class="label">Latitude</div>
       <div class="value" id="latValue">—</div>
     </div>
-    <div class="data-tile">
-      <div class="label">Bujur (Long)</div>
+    <div class="tile">
+      <div class="label">Longitude</div>
       <div class="value" id="lonValue">—</div>
     </div>
-    <div class="data-tile">
+    <div class="tile">
       <div class="label">Altitude</div>
       <div class="value" id="altValue">—</div>
     </div>
-    <div class="data-tile">
-      <div class="label">Akurasi GPS</div>
+    <div class="tile">
+      <div class="label">GPS Accuracy</div>
       <div class="value" id="accValue">—</div>
     </div>
   </div>
 
-  <details class="helptext">
-    <summary>Cara mengizinkan akses sensor kompas</summary>
-    <div><strong>Di iPhone (Safari):</strong></div>
+  <details class="help">
+    <summary>How to allow compass sensor access</summary>
+    <div><strong>On iPhone (Safari):</strong></div>
     <ol>
-      <li>Tekan tombol "Mulai / Kalibrasi Sensor" lalu izinkan saat muncul pop-up "Motion & Orientation Access".</li>
-      <li>Jika tidak muncul pop-up, buka <strong>Pengaturan → Safari → Motion & Orientation Access</strong> dan aktifkan.</li>
+      <li>Tap "Start / Calibrate Sensors" and allow the "Motion & Orientation Access" pop-up when it appears.</li>
+      <li>If no pop-up appears, go to <strong>Settings → Safari → Motion & Orientation Access</strong> and turn it on.</li>
     </ol>
-    <div style="margin-top:8px;"><strong>Di Android (Chrome):</strong></div>
+    <div style="margin-top:8px;"><strong>On Android (Chrome):</strong></div>
     <ol>
-      <li>Izinkan akses lokasi saat diminta, sensor arah biasanya aktif otomatis.</li>
-      <li>Gerakkan HP membentuk angka 8 beberapa kali untuk mengkalibrasi ulang magnetometer jika arah terasa tidak akurat.</li>
-      <li>Jauhkan HP dari benda logam atau magnet (case, speaker) yang dapat mengganggu sensor.</li>
+      <li>Allow the location permission prompt — the orientation sensor usually activates automatically.</li>
+      <li>Wave your phone in a figure-8 motion a few times to recalibrate the magnetometer if the heading looks off.</li>
+      <li>Keep the phone away from metal objects, magnets, or speaker cases that can interfere with the sensor.</li>
     </ol>
   </details>
 
-  <footer class="foot">DIBUAT UNTUK NAVIGASI • KOMPAS DIGITAL</footer>
+  <div class="foot">Built for Navigation • Digital Compass</div>
 </div>
 
 <script>
 (function(){
   "use strict";
 
-  // ---------- Elements ----------
   const rose = document.getElementById('rose');
-  const needleGroup = document.getElementById('needleGroup');
   const qiblaArrow = document.getElementById('qiblaArrow');
   const degReadout = document.getElementById('degReadout');
   const dirReadout = document.getElementById('dirReadout');
   const statusBanner = document.getElementById('statusBanner');
   const calibrateBtn = document.getElementById('calibrateBtn');
-  const themeBtn = document.getElementById('themeBtn');
+  const lightBtn = document.getElementById('lightBtn');
+  const darkBtn = document.getElementById('darkBtn');
   const btnCompassMode = document.getElementById('btnCompassMode');
   const btnQiblaMode = document.getElementById('btnQiblaMode');
   const qiblaInfo = document.getElementById('qiblaInfo');
@@ -456,11 +471,11 @@
   const lonValue = document.getElementById('lonValue');
   const altValue = document.getElementById('altValue');
   const accValue = document.getElementById('accValue');
+  const accuracyHalo = document.getElementById('accuracyHalo');
 
-  // ---------- State ----------
   let currentHeading = 0;
   let smoothedHeading = null;
-  let mode = 'compass'; // or 'qibla'
+  let mode = 'compass';
   let userLat = null, userLon = null;
   let qiblaBearing = null;
   let sensorStarted = false;
@@ -470,7 +485,6 @@
   const KAABA_LAT = 21.4225;
   const KAABA_LON = 39.8262;
 
-  // ---------- Draw tick marks (every 10deg, labels every 30deg) ----------
   (function drawTicks(){
     const g = document.getElementById('ticks');
     const cx = 150, cy = 150, rOuter = 126, rInner10 = 112, rInner30 = 104;
@@ -485,9 +499,9 @@
       const line = document.createElementNS('http://www.w3.org/2000/svg','line');
       line.setAttribute('x1',x1); line.setAttribute('y1',y1);
       line.setAttribute('x2',x2); line.setAttribute('y2',y2);
-      line.setAttribute('stroke', isMajor ? 'var(--brass)' : 'var(--ink-dim)');
+      line.setAttribute('stroke', isMajor ? 'var(--indigo-bright)' : 'var(--ink-dim)');
       line.setAttribute('stroke-width', isMajor ? 2 : 1);
-      line.setAttribute('opacity', isMajor ? 0.9 : 0.45);
+      line.setAttribute('opacity', isMajor ? 0.9 : 0.4);
       g.appendChild(line);
 
       if(isMajor && deg % 90 !== 0){
@@ -498,7 +512,7 @@
         text.setAttribute('x',tx); text.setAttribute('y',ty+4);
         text.setAttribute('text-anchor','middle');
         text.setAttribute('font-size','10');
-        text.setAttribute('font-family','SFMono-Regular, Consolas, monospace');
+        text.setAttribute('font-family','ui-monospace, monospace');
         text.setAttribute('fill','var(--ink-dim)');
         text.textContent = deg;
         g.appendChild(text);
@@ -506,22 +520,18 @@
     }
   })();
 
-  // ---------- Helpers ----------
   function showStatus(msg, kind){
     statusBanner.textContent = msg;
-    statusBanner.className = 'status-banner show' + (kind ? ' '+kind : '');
+    statusBanner.className = 'status show' + (kind ? ' '+kind : '');
   }
-  function hideStatus(){
-    statusBanner.className = 'status-banner';
-  }
+  function hideStatus(){ statusBanner.className = 'status'; }
 
   function degToCompassDir(deg){
-    const dirs = ['U','TL','T','TG','S','BD','B','BL'];
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
     const idx = Math.round(deg / 45) % 8;
     return dirs[idx];
   }
 
-  // shortest-path rotation smoothing to avoid 359->0 jump spin
   function shortestDelta(from, to){
     let diff = (to - from) % 360;
     if(diff > 180) diff -= 360;
@@ -533,31 +543,23 @@
     if(smoothedHeading === null){ smoothedHeading = heading; }
     else {
       const delta = shortestDelta(smoothedHeading, heading);
-      smoothedHeading += delta; // accumulate so rotation is continuous, no snap
+      smoothedHeading += delta;
     }
     currentHeading = ((heading % 360) + 360) % 360;
 
-    // Rotate the rose opposite to heading so "U" always points to true north visually
     rose.style.transform = `rotate(${-smoothedHeading}deg)`;
-    needleGroup.style.transform = `rotate(0deg)`; // needle fixed pointing up (device heading)
 
     degReadout.textContent = Math.round(currentHeading) + '°';
     dirReadout.textContent = degToCompassDir(currentHeading);
 
     if(mode === 'qibla' && qiblaBearing !== null){
-      const rel = shortestDeltaRelative(qiblaBearing, currentHeading);
-      qiblaArrow.style.transform = `rotate(${qiblaBearing - smoothedHeading + (smoothedHeading - currentHeading)}deg)`;
-      // Simplify: arrow rotation relative to rose frame = qiblaBearing - smoothedHeading offset already applied by rose;
-      // Since rose rotates by -smoothedHeading, and arrow sits in fixed (non-rose) layer, rotate arrow by (qiblaBearing - currentHeading)
       const arrowRotate = qiblaBearing - currentHeading;
       qiblaArrow.style.transform = `rotate(${arrowRotate}deg)`;
       let diff = Math.round(shortestDelta(currentHeading, qiblaBearing));
       qiblaDiffEl.textContent = Math.abs(diff) + '°';
     }
   }
-  function shortestDeltaRelative(a,b){ return shortestDelta(b,a); }
 
-  // ---------- Mode switching ----------
   function setMode(newMode){
     mode = newMode;
     if(mode === 'qibla'){
@@ -566,7 +568,7 @@
       qiblaArrow.style.display = 'block';
       qiblaInfo.classList.add('show');
       if(userLat !== null) computeQibla();
-      else showStatus('Mengambil lokasi untuk menghitung arah kiblat…');
+      else showStatus('Fetching your location to calculate the Qibla direction…');
     } else {
       btnCompassMode.classList.add('active');
       btnQiblaMode.classList.remove('active');
@@ -592,22 +594,18 @@
     hideStatus();
   }
 
-  // ---------- Theme ----------
   function applyTheme(theme){
     document.body.setAttribute('data-theme', theme);
-    themeBtn.textContent = theme === 'dark' ? '🌙' : '☀️';
+    lightBtn.classList.toggle('active', theme === 'light');
+    darkBtn.classList.toggle('active', theme === 'dark');
   }
-  let theme = 'dark';
-  applyTheme(theme);
-  themeBtn.addEventListener('click', ()=>{
-    theme = theme === 'dark' ? 'light' : 'dark';
-    applyTheme(theme);
-  });
+  applyTheme('light');
+  lightBtn.addEventListener('click', ()=>applyTheme('light'));
+  darkBtn.addEventListener('click', ()=>applyTheme('dark'));
 
-  // ---------- Geolocation ----------
   function startGeolocation(){
     if(!('geolocation' in navigator)){
-      showStatus('Perangkat/browser ini tidak mendukung GPS (Geolocation API).', 'warn');
+      showStatus('This device/browser does not support GPS (Geolocation API).', 'warn');
       return;
     }
     if(geoWatchId !== null) return;
@@ -626,8 +624,15 @@
     lonValue.textContent = userLon.toFixed(6) + '°';
     altValue.textContent = (pos.coords.altitude !== null && pos.coords.altitude !== undefined)
       ? Math.round(pos.coords.altitude) + ' m'
-      : 'Tidak didukung perangkat';
-    accValue.textContent = pos.coords.accuracy ? '±' + Math.round(pos.coords.accuracy) + ' m' : '—';
+      : 'Not supported on this device';
+    const acc = pos.coords.accuracy;
+    accValue.textContent = acc ? '±' + Math.round(acc) + ' m' : '—';
+
+    if(acc){
+      const scale = Math.min(1.6, Math.max(0.9, acc / 25));
+      accuracyHalo.style.transform = `scale(${scale})`;
+      accuracyHalo.style.opacity = Math.min(0.9, Math.max(0.35, 30/acc));
+    }
 
     if(mode === 'qibla') computeQibla();
 
@@ -639,16 +644,16 @@
   }
 
   function onPositionError(err){
-    let msg = 'Tidak dapat mengambil lokasi GPS.';
-    if(err.code === 1) msg = 'Akses lokasi ditolak. Aktifkan izin lokasi di pengaturan browser untuk melihat koordinat dan arah kiblat.';
-    else if(err.code === 2) msg = 'Lokasi tidak tersedia. Pastikan GPS/Location Service aktif.';
-    else if(err.code === 3) msg = 'Permintaan lokasi melebihi batas waktu. Coba lagi di area terbuka.';
+    let msg = 'Unable to retrieve your GPS location.';
+    if(err.code === 1) msg = 'Location access denied. Enable location permission in your browser settings to see coordinates and Qibla direction.';
+    else if(err.code === 2) msg = 'Location unavailable. Make sure GPS / Location Services are turned on.';
+    else if(err.code === 3) msg = 'Location request timed out. Try again in an open outdoor area.';
     showStatus(msg, 'warn');
-    cityValue.textContent = 'Tidak tersedia';
+    cityValue.textContent = 'Unavailable';
   }
 
   async function reverseGeocode(lat, lon){
-    cityValue.textContent = 'Mencari nama lokasi…';
+    cityValue.textContent = 'Looking up place name…';
     try{
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12&addressdetails=1`;
       const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -659,17 +664,15 @@
       const region = a.state || a.region || '';
       const country = a.country || '';
       const parts = [city, region, country].filter(Boolean);
-      cityValue.textContent = parts.length ? parts.join(', ') : (data.display_name || 'Lokasi ditemukan');
+      cityValue.textContent = parts.length ? parts.join(', ') : (data.display_name || 'Location found');
     }catch(e){
-      cityValue.textContent = 'Nama lokasi tidak dapat diambil (cek koneksi internet)';
+      cityValue.textContent = 'Place name unavailable (check internet connection)';
     }
   }
 
-  // ---------- Device Orientation ----------
   function handleOrientation(event){
     let heading = null;
     if(typeof event.webkitCompassHeading === 'number' && !isNaN(event.webkitCompassHeading)){
-      // iOS Safari: already compass heading (0 = North), no need to invert
       heading = event.webkitCompassHeading;
     } else if(event.absolute && event.alpha !== null){
       heading = 360 - event.alpha;
@@ -688,54 +691,48 @@
 
   async function startSensors(){
     if(sensorStarted){
-      showStatus('Mengkalibrasi ulang… gerakkan HP membentuk angka 8 beberapa kali.', 'ok');
+      showStatus('Recalibrating… wave your phone in a figure-8 motion a few times.', 'ok');
       setTimeout(hideStatus, 3000);
       return;
     }
 
     if(typeof DeviceOrientationEvent === 'undefined'){
-      showStatus('Browser ini tidak mendukung sensor orientasi perangkat.', 'warn');
+      showStatus('This browser does not support the Device Orientation sensor.', 'warn');
     } else if(typeof DeviceOrientationEvent.requestPermission === 'function'){
-      // iOS 13+
       try{
         const state = await DeviceOrientationEvent.requestPermission();
         if(state === 'granted'){
           attachOrientationListener();
           sensorStarted = true;
-          showStatus('Sensor arah aktif.', 'ok');
+          showStatus('Heading sensor active.', 'ok');
           setTimeout(hideStatus, 2000);
         } else {
-          showStatus('Izin sensor gerak/orientasi ditolak. Buka Pengaturan → Safari → Motion & Orientation Access untuk mengaktifkan.', 'warn');
+          showStatus('Motion & orientation permission denied. Go to Settings → Safari → Motion & Orientation Access to enable it.', 'warn');
         }
       }catch(e){
-        showStatus('Gagal meminta izin sensor: ' + e.message, 'warn');
+        showStatus('Failed to request sensor permission: ' + e.message, 'warn');
       }
     } else {
-      // Android / other browsers - no explicit permission prompt required
       attachOrientationListener();
       sensorStarted = true;
-      showStatus('Sensor arah aktif. Jika arah tidak akurat, gerakkan HP membentuk angka 8.', 'ok');
+      showStatus('Heading sensor active. If the direction looks off, wave your phone in a figure-8 motion.', 'ok');
       setTimeout(hideStatus, 3000);
     }
 
-    // Also (re)start geolocation on the same user gesture
     startGeolocation();
   }
 
   calibrateBtn.addEventListener('click', startSensors);
 
-  // Try starting geolocation automatically (works without gesture on most desktop browsers);
-  // orientation sensors on iOS require the button tap due to permission prompt requirement.
   startGeolocation();
 
   if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function'){
-    // Non-iOS: attach automatically since no gesture-gated permission is needed
     attachOrientationListener();
     sensorStarted = true;
   } else if(typeof DeviceOrientationEvent === 'undefined'){
-    showStatus('Perangkat ini tidak mendukung sensor kompas (DeviceOrientation API).', 'warn');
+    showStatus('This device does not support the compass sensor (DeviceOrientation API).', 'warn');
   } else {
-    showStatus('Tekan "Mulai / Kalibrasi Sensor" untuk mengaktifkan kompas.', 'ok');
+    showStatus('Tap "Start / Calibrate Sensors" to activate the compass.', 'ok');
   }
 
 })();
