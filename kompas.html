@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kompas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #0b1c28;
+    --navy-deep: #071319;
+    --brass: #c9a15c;
+    --brass-bright: #e3c584;
+    --parchment: #ece2c6;
+    --teal-grey: #3d5867;
+    --needle-red: #9a4438;
+    --ink: #dfe6e6;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 50% -10%, #163247 0%, var(--navy) 55%, var(--navy-deep) 100%);
+    color: var(--ink);
+    font-family: 'Spectral', serif;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 40px;
+    overflow-x: hidden;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    color: var(--brass);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.85;
+  }
+
+  h1 {
+    font-weight: 400;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    margin: 0 0 28px;
+    color: var(--parchment);
+  }
+
+  /* ---------- instrument plate ---------- */
+  .plate {
+    position: relative;
+    width: min(78vw, 340px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 28%, #16303f 0%, #0d222d 55%, #081620 100%);
+    box-shadow:
+      0 0 0 2px rgba(201,161,92,0.15),
+      0 0 0 10px var(--navy-deep),
+      0 0 0 12px rgba(201,161,92,0.35),
+      0 20px 60px rgba(0,0,0,0.55),
+      inset 0 2px 10px rgba(0,0,0,0.6);
+  }
+
+  .screw {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--brass-bright), var(--brass) 60%, #7a5f30 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .screw::after{
+    content:"";
+    position:absolute; top:50%; left:50%;
+    width: 6px; height: 1px;
+    background: rgba(0,0,0,0.5);
+    transform: translate(-50%,-50%) rotate(35deg);
+  }
+  .screw.tl{ top: 6px; left: 6px; }
+  .screw.tr{ top: 6px; right: 6px; }
+  .screw.bl{ bottom: 6px; left: 6px; }
+  .screw.br{ bottom: 6px; right: 6px; }
+
+  /* rotating dial (rose + ticks + letters rotate; needle stays fixed) */
+  .dial {
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    transition: transform 0.15s ease-out;
+  }
+
+  .dial svg { width: 100%; height: 100%; display: block; }
+
+  /* fixed needle overlay pointing to top (device heading) */
+  .needle-fixed {
+    position: absolute;
+    inset: 14px;
+    pointer-events: none;
+  }
+
+  .center-cap {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle at 35% 30%, var(--brass-bright), #8a6a34 70%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  }
+
+  /* glass glare */
+  .glass {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0) 55%);
+    pointer-events: none;
+  }
+
+  /* ---------- readout ---------- */
+  .readout {
+    margin-top: 34px;
+    text-align: center;
+  }
+
+  .degree {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(40px, 12vw, 56px);
+    font-weight: 500;
+    color: var(--parchment);
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .degree .unit { font-size: 0.5em; color: var(--brass); margin-left: 4px; }
+
+  .cardinal {
+    font-family: 'Spectral', serif;
+    font-size: 15px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-top: 8px;
+  }
+
+  .cardinal .sub {
+    color: var(--teal-grey);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* ---------- status / permission ---------- */
+  .status {
+    margin-top: 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--teal-grey);
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+
+  button {
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--navy-deep);
+    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
+    border: none;
+    padding: 12px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  }
+  button:active { transform: translateY(1px); }
+
+  .hidden { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dial { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="eyebrow">Instrumen Navigasi</div>
+  <h1>Kompas</h1>
+
+  <div class="plate">
+    <div class="screw tl"></div>
+    <div class="screw tr"></div>
+    <div class="screw bl"></div>
+    <div class="screw br"></div>
+
+    <div class="dial" id="dial">
+      <svg viewBox="0 0 200 200">
+        <defs>
+          <path id="arcText" d="M 100 100 m -78 0 a 78 78 0 1 1 156 0 a 78 78 0 1 1 -156 0" fill="none"/>
+        </defs>
+
+        <!-- outer ring ticks: 72 ticks, every 5deg, longer every 30deg -->
+        <g stroke="#c9a15c" stroke-opacity="0.75">
+          <g id="ticks"></g>
+        </g>
+
+        <!-- degree numerals every 30deg -->
+        <g id="degLabels" fill="#8ea3ad" font-family="JetBrains Mono, monospace" font-size="7" text-anchor="middle"></g>
+
+        <!-- cardinal letters -->
+        <g fill="#ece2c6" font-family="Spectral, serif" font-weight="600">
+          <text x="100" y="34" font-size="18" text-anchor="middle">N</text>
+          <text x="166" y="104" font-size="14" text-anchor="middle">E</text>
+          <text x="100" y="174" font-size="14" text-anchor="middle">S</text>
+          <text x="34" y="104" font-size="14" text-anchor="middle">W</text>
+        </g>
+
+        <!-- inner rose star -->
+        <g opacity="0.55">
+          <polygon points="100,52 108,92 100,100 92,92" fill="#c9a15c"/>
+          <polygon points="100,148 108,108 100,100 92,108" fill="#3d5867"/>
+          <polygon points="52,100 92,92 100,100 92,108" fill="#3d5867"/>
+          <polygon points="148,100 108,92 100,100 108,108" fill="#c9a15c"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- fixed needle, always points to actual heading direction on screen (top) -->
+    <div class="needle-fixed">
+      <svg viewBox="0 0 200 200">
+        <polygon points="100,26 108,100 100,88 92,100" fill="#9a4438"/>
+        <polygon points="100,174 108,100 100,112 92,100" fill="#ece2c6"/>
+      </svg>
+    </div>
+
+    <div class="glass"></div>
+    <div class="center-cap"></div>
+  </div>
+
+  <div class="readout">
+    <div class="degree"><span id="degreeValue">--</span><span class="unit">°</span></div>
+    <div class="cardinal">
+      <span id="cardinalValue">—</span>
+      <span class="sub" id="subLabel">menunggu sensor</span>
+    </div>
+  </div>
+
+  <div class="status" id="statusText">
+    Membuka akses sensor perangkat…
+  </div>
+  <button id="permBtn" class="hidden">Aktifkan Kompas</button>
+
+<script>
+  const dial = document.getElementById('dial');
+  const degreeValue = document.getElementById('degreeValue');
+  const cardinalValue = document.getElementById('cardinalValue');
+  const subLabel = document.getElementById('subLabel');
+  const statusText = document.getElementById('statusText');
+  const permBtn = document.getElementById('permBtn');
+
+  // build tick marks + degree labels (every 5deg tick, every 30deg number)
+  const ticksGroup = document.getElementById('ticks');
+  const labelsGroup = document.getElementById('degLabels');
+  const cx = 100, cy = 100, rOuter = 90;
+  for (let deg = 0; deg < 360; deg += 5) {
+    const isMajor = deg % 30 === 0;
+    const len = isMajor ? 12 : 6;
+    const w = isMajor ? 1.4 : 0.7;
+    const rad = (deg - 90) * Math.PI / 180;
+    const x1 = cx + (rOuter) * Math.cos(rad);
+    const y1 = cy + (rOuter) * Math.sin(rad);
+    const x2 = cx + (rOuter - len) * Math.cos(rad);
+    const y2 = cy + (rOuter - len) * Math.sin(rad);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+    line.setAttribute("stroke-width", w);
+    ticksGroup.appendChild(line);
+
+    if (isMajor && deg % 90 !== 0) {
+      const rLabel = rOuter - 20;
+      const lx = cx + rLabel * Math.cos(rad);
+      const ly = cy + rLabel * Math.sin(rad) + 2;
+      const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      t.setAttribute("x", lx); t.setAttribute("y", ly);
+      t.textContent = deg;
+      labelsGroup.appendChild(t);
+    }
+  }
+
+  function cardinalFromDeg(deg) {
+    const dirs = ["Utara","Timur Laut","Timur","Tenggara","Selatan","Barat Daya","Barat","Barat Laut"];
+    const idx = Math.round(deg / 45) % 8;
+    return dirs[idx];
+  }
+  function shortFromDeg(deg){
+    const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+    const idx = Math.round(deg / 45) % 8;
+    return dirs[idx];
+  }
+
+  let smoothed = null;
+  function updateHeading(heading) {
+    if (heading == null || isNaN(heading)) return;
+    // smooth rotation across the 0/360 wrap
+    if (smoothed === null) smoothed = heading;
+    let delta = heading - (smoothed % 360);
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    smoothed += delta * 0.25;
+
+    const displayDeg = ((smoothed % 360) + 360) % 360;
+    dial.style.transform = `rotate(${-displayDeg}deg)`;
+    degreeValue.textContent = Math.round(displayDeg);
+    cardinalValue.textContent = shortFromDeg(displayDeg);
+    subLabel.textContent = cardinalFromDeg(displayDeg);
+  }
+
+  function handleOrientation(event) {
+    let heading = null;
+    if (event.webkitCompassHeading !== undefined) {
+      // iOS Safari: already true north heading, no need to invert
+      heading = event.webkitCompassHeading;
+    } else if (event.absolute && event.alpha !== null) {
+      heading = 360 - event.alpha;
+    } else if (event.alpha !== null) {
+      heading = 360 - event.alpha;
+    }
+    if (heading !== null) {
+      statusText.textContent = "Kompas aktif — putar perangkat untuk kalibrasi.";
+      updateHeading(heading);
+    }
+  }
+
+  function startListening() {
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    statusText.textContent = "Mencari sinyal sensor…";
+  }
+
+  function needsIOSPermission() {
+    return typeof DeviceOrientationEvent !== 'undefined' &&
+           typeof DeviceOrientationEvent.requestPermission === 'function';
+  }
+
+  if (needsIOSPermission()) {
+    statusText.textContent = "Perangkat ini butuh izin akses sensor gerak.";
+    permBtn.classList.remove('hidden');
+    permBtn.addEventListener('click', () => {
+      DeviceOrientationEvent.requestPermission().then(response => {
+        if (response === 'granted') {
+          permBtn.classList.add('hidden');
+          startListening();
+        } else {
+          statusText.textContent = "Izin ditolak. Aktifkan lewat pengaturan browser untuk memakai kompas.";
+        }
+      }).catch(() => {
+        statusText.textContent = "Gagal meminta izin sensor. Coba muat ulang halaman.";
+      });
+    });
+  } else if (window.DeviceOrientationEvent) {
+    startListening();
+    // fallback message if no data arrives after a bit
+    setTimeout(() => {
+      if (degreeValue.textContent === "--") {
+        statusText.textContent = "Sensor tidak terdeteksi. Pastikan dibuka lewat HTTPS di HP dengan sensor magnetometer.";
+      }
+    }, 2500);
+  } else {
+    statusText.textContent = "Perangkat/browser ini tidak mendukung sensor orientasi.";
+  }
+</script>
+</body>
+</html>
