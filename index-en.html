@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>Compass — Heading &amp; Qibla Instrument</title>
+<style>
+  :root{
+    --bg:#eef1f8;
+    --bg-2:#dfe5f3;
+    --panel: rgba(255,255,255,0.62);
+    --panel-solid:#ffffff;
+    --panel-border: rgba(30,41,74,0.10);
+    --ink:#151b2e;
+    --ink-dim:#5c6480;
+    --indigo:#3e56d9;
+    --indigo-bright:#6f83ff;
+    --coral:#ff6a55;
+    --mint:#2fbf8f;
+    --shadow: 0 24px 60px rgba(30,41,74,0.16);
+    --radius:26px;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+  [data-theme="dark"]{
+    --bg:#0b0f1c;
+    --bg-2:#050810;
+    --panel: rgba(255,255,255,0.045);
+    --panel-solid:#12172a;
+    --panel-border: rgba(255,255,255,0.09);
+    --ink:#eef1fb;
+    --ink-dim:#8890ac;
+    --shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:var(--sans);
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(62,86,217,0.16), transparent 55%),
+      radial-gradient(900px 500px at 100% 0%, rgba(255,106,85,0.10), transparent 50%),
+      linear-gradient(180deg, var(--bg), var(--bg-2));
+    transition: background .4s ease, color .4s ease;
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    padding:22px 18px 40px;
+    min-height:100vh;
+  }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .wordmark{ display:flex; flex-direction:column; }
+  .wordmark .kicker{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    font-weight:600;
+  }
+  .wordmark h1{
+    margin:3px 0 0;
+    font-size:25px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .theme-pill{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    border-radius:999px;
+    padding:6px 6px;
+    box-shadow:var(--shadow);
+  }
+  .theme-pill button{
+    width:32px;height:32px;
+    border-radius:50%;
+    border:none;
+    background:transparent;
+    color:var(--ink-dim);
+    font-size:15px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition: all .25s ease;
+  }
+  .theme-pill button.active{
+    background:linear-gradient(140deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    box-shadow:0 6px 16px rgba(62,86,217,0.4);
+  }
+
+  /* ---- Status ---- */
+  .status{
+    display:none;
+    font-family:var(--mono);
+    font-size:12px;
+    line-height:1.55;
+    padding:11px 14px;
+    border-radius:14px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    color:var(--ink-dim);
+    margin-bottom:16px;
+  }
+  .status.show{display:block;}
+  .status.warn{ color:var(--coral); border-color:rgba(255,106,85,0.4); }
+  .status.ok{ color:var(--mint); border-color:rgba(47,191,143,0.4); }
+
+  /* ---- Segmented control ---- */
+  .segmented{
+    display:flex;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:5px;
+    gap:4px;
+    margin-bottom:18px;
+  }
+  .segmented button{
+    flex:1;
+    border:none;
+    background:transparent;
+    color:var(--ink-dim);
+    font-family:var(--sans);
+    font-size:13.5px;
+    font-weight:600;
+    padding:11px 6px;
+    border-radius:12px;
+    cursor:pointer;
+    transition: all .25s ease;
+  }
+  .segmented button.active{
+    background:linear-gradient(140deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    box-shadow: 0 8px 20px rgba(62,86,217,0.35);
+  }
+
+  /* ---- Instrument stage ---- */
+  .stage{
+    position:relative;
+    background:var(--panel);
+    backdrop-filter:blur(20px);
+    border-radius:var(--radius);
+    border:1px solid var(--panel-border);
+    box-shadow:var(--shadow);
+    padding:30px 16px 22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    overflow:hidden;
+  }
+  .stage::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: radial-gradient(circle at 50% 20%, rgba(111,131,255,0.14), transparent 60%);
+    pointer-events:none;
+  }
+
+  .dial-wrap{
+    position:relative;
+    width:min(76vw, 300px);
+    aspect-ratio:1/1;
+  }
+  .accuracy-halo{
+    position:absolute;
+    inset:-6%;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(47,191,143,0.16), transparent 70%);
+    transform:scale(1);
+    transition: transform .6s ease, opacity .6s ease;
+    opacity:0.7;
+  }
+  .dial-wrap svg{ position:relative; width:100%; height:100%; display:block; }
+
+  .rose{ transform-origin:50% 50%; transition: transform .35s cubic-bezier(.22,.8,.32,1); }
+  .qibla-arrow{ transform-origin:50% 50%; transition: transform .4s cubic-bezier(.22,.8,.32,1); }
+
+  .readout{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    pointer-events:none;
+  }
+  .readout .deg{
+    font-family:var(--mono);
+    font-size:36px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .readout .dir{
+    font-family:var(--sans);
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    margin-top:2px;
+  }
+
+  .qibla-info{
+    display:none;
+    width:100%;
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-dim);
+  }
+  .qibla-info.show{display:block;}
+  .qibla-info b{ color:var(--ink); font-family:var(--mono); font-size:16px; font-weight:700; }
+
+  .calibrate{
+    width:100%;
+    padding:14px;
+    border-radius:16px;
+    border:none;
+    background:linear-gradient(140deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    font-family:var(--sans);
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.01em;
+    cursor:pointer;
+    box-shadow: 0 12px 26px rgba(62,86,217,0.35);
+    transition: transform .15s ease;
+  }
+  .calibrate:active{ transform:scale(0.97); }
+
+  /* ---- Data grid ---- */
+  .grid{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .tile{
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:13px 14px;
+  }
+  .tile.wide{ grid-column:1/-1; display:flex; align-items:center; gap:10px; }
+  .tile .label{
+    font-family:var(--mono);
+    font-size:9.5px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    margin-bottom:4px;
+  }
+  .tile .value{
+    font-family:var(--mono);
+    font-size:14.5px;
+    word-break:break-word;
+  }
+  .pulse-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--mint);
+    flex:none;
+    box-shadow:0 0 0 4px rgba(47,191,143,0.16);
+  }
+
+  /* ---- Help ---- */
+  .help{
+    margin-top:18px;
+    padding:15px 16px;
+    border-radius:16px;
+    background:var(--panel);
+    backdrop-filter:blur(14px);
+    border:1px dashed var(--panel-border);
+    font-size:13px;
+    line-height:1.6;
+    color:var(--ink-dim);
+  }
+  .help summary{
+    cursor:pointer;
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .help strong{ color:var(--ink); }
+  .help ol{ margin:8px 0 0; padding-left:20px; }
+  .help li{ margin-bottom:6px; }
+
+  .foot{
+    text-align:center;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-top:22px;
+    opacity:.65;
+  }
+
+  @media (max-width:380px){
+    .wordmark h1{ font-size:21px; }
+    .readout .deg{ font-size:29px; }
+  }
+</style>
+</head>
+<body data-theme="light">
+<div class="app">
+
+  <div class="topbar">
+    <div class="wordmark">
+      <span class="kicker">Heading Instrument</span>
+      <h1>Compass</h1>
+    </div>
+    <div class="theme-pill">
+      <button id="lightBtn" class="active" title="Light mode" aria-label="Light mode">☀️</button>
+      <button id="darkBtn" title="Dark mode" aria-label="Dark mode">🌙</button>
+    </div>
+  </div>
+
+  <div class="status" id="statusBanner"></div>
+
+  <div class="segmented">
+    <button id="btnCompassMode" class="active">Compass</button>
+    <button id="btnQiblaMode">Qibla Direction</button>
+  </div>
+
+  <div class="stage">
+    <div class="dial-wrap">
+      <div class="accuracy-halo" id="accuracyHalo"></div>
+      <svg viewBox="0 0 300 300">
+        <defs>
+          <radialGradient id="faceGrad" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="var(--panel-solid)" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="var(--panel-solid)" stop-opacity="0.55"/>
+          </radialGradient>
+          <linearGradient id="needleN" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ff6a55"/>
+            <stop offset="100%" stop-color="#c9432f"/>
+          </linearGradient>
+          <linearGradient id="needleS" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#c9d0e6"/>
+            <stop offset="100%" stop-color="#8a91ab"/>
+          </linearGradient>
+          <linearGradient id="qiblaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6f83ff"/>
+            <stop offset="100%" stop-color="#3e56d9"/>
+          </linearGradient>
+        </defs>
+
+        <circle cx="150" cy="150" r="144" fill="url(#faceGrad)" stroke="var(--panel-border)" stroke-width="2"/>
+        <circle cx="150" cy="150" r="126" fill="none" stroke="var(--panel-border)" stroke-width="1"/>
+
+        <g class="rose" id="rose">
+          <g id="ticks"></g>
+          <g id="cardinals" font-family="ui-monospace, monospace" font-weight="800" text-anchor="middle">
+            <text x="150" y="38" font-size="19" fill="#ff6a55">N</text>
+            <text x="150" y="270" font-size="15" fill="var(--ink-dim)">S</text>
+            <text x="262" y="156" font-size="15" fill="var(--ink-dim)">E</text>
+            <text x="38" y="156" font-size="15" fill="var(--ink-dim)">W</text>
+          </g>
+        </g>
+
+        <g class="needle-group" id="needleGroup">
+          <path d="M150,42 L162,150 L150,140 L138,150 Z" fill="url(#needleN)"/>
+          <path d="M150,258 L162,150 L150,160 L138,150 Z" fill="url(#needleS)"/>
+          <circle cx="150" cy="150" r="9" fill="var(--indigo)" stroke="var(--panel-solid)" stroke-width="2"/>
+        </g>
+
+        <g class="qibla-arrow" id="qiblaArrow" style="display:none;">
+          <path d="M150,18 L166,58 L150,48 L134,58 Z" fill="url(#qiblaGrad)"/>
+          <line x1="150" y1="18" x2="150" y2="150" stroke="url(#qiblaGrad)" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+          <circle cx="150" cy="18" r="5" fill="#6f83ff"/>
+        </g>
+
+        <polygon points="150,4 156,18 144,18" fill="var(--indigo)"/>
+      </svg>
+
+      <div class="readout">
+        <div class="deg" id="degReadout">--°</div>
+        <div class="dir" id="dirReadout">Awaiting Sensor</div>
+      </div>
+    </div>
+
+    <div class="qibla-info" id="qiblaInfo">
+      Qibla bearing to the Kaaba: <b id="qiblaDeg">--°</b> from True North &nbsp;•&nbsp; Offset from your heading: <b id="qiblaDiff">--°</b>
+    </div>
+
+    <button class="calibrate" id="calibrateBtn">Start / Calibrate Sensors</button>
+  </div>
+
+  <div class="grid">
+    <div class="tile wide">
+      <span class="pulse-dot"></span>
+      <div>
+        <div class="label">Location</div>
+        <div class="value" id="cityValue">Not detected yet</div>
+      </div>
+    </div>
+    <div class="tile">
+      <div class="label">Latitude</div>
+      <div class="value" id="latValue">—</div>
+    </div>
+    <div class="tile">
+      <div class="label">Longitude</div>
+      <div class="value" id="lonValue">—</div>
+    </div>
+    <div class="tile">
+      <div class="label">Altitude</div>
+      <div class="value" id="altValue">—</div>
+    </div>
+    <div class="tile">
+      <div class="label">GPS Accuracy</div>
+      <div class="value" id="accValue">—</div>
+    </div>
+  </div>
+
+  <details class="help">
+    <summary>How to allow compass sensor access</summary>
+    <div><strong>On iPhone (Safari):</strong></div>
+    <ol>
+      <li>Tap "Start / Calibrate Sensors" and allow the "Motion & Orientation Access" pop-up when it appears.</li>
+      <li>If no pop-up appears, go to <strong>Settings → Safari → Motion & Orientation Access</strong> and turn it on.</li>
+    </ol>
+    <div style="margin-top:8px;"><strong>On Android (Chrome):</strong></div>
+    <ol>
+      <li>Allow the location permission prompt — the orientation sensor usually activates automatically.</li>
+      <li>Wave your phone in a figure-8 motion a few times to recalibrate the magnetometer if the heading looks off.</li>
+      <li>Keep the phone away from metal objects, magnets, or speaker cases that can interfere with the sensor.</li>
+    </ol>
+  </details>
+
+  <div class="foot">Built for Navigation • Digital Compass</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const rose = document.getElementById('rose');
+  const qiblaArrow = document.getElementById('qiblaArrow');
+  const degReadout = document.getElementById('degReadout');
+  const dirReadout = document.getElementById('dirReadout');
+  const statusBanner = document.getElementById('statusBanner');
+  const calibrateBtn = document.getElementById('calibrateBtn');
+  const lightBtn = document.getElementById('lightBtn');
+  const darkBtn = document.getElementById('darkBtn');
+  const btnCompassMode = document.getElementById('btnCompassMode');
+  const btnQiblaMode = document.getElementById('btnQiblaMode');
+  const qiblaInfo = document.getElementById('qiblaInfo');
+  const qiblaDegEl = document.getElementById('qiblaDeg');
+  const qiblaDiffEl = document.getElementById('qiblaDiff');
+  const cityValue = document.getElementById('cityValue');
+  const latValue = document.getElementById('latValue');
+  const lonValue = document.getElementById('lonValue');
+  const altValue = document.getElementById('altValue');
+  const accValue = document.getElementById('accValue');
+  const accuracyHalo = document.getElementById('accuracyHalo');
+
+  let currentHeading = 0;
+  let smoothedHeading = null;
+  let mode = 'compass';
+  let userLat = null, userLon = null;
+  let qiblaBearing = null;
+  let sensorStarted = false;
+  let geoWatchId = null;
+  let lastCityKey = null;
+
+  const KAABA_LAT = 21.4225;
+  const KAABA_LON = 39.8262;
+
+  (function drawTicks(){
+    const g = document.getElementById('ticks');
+    const cx = 150, cy = 150, rOuter = 126, rInner10 = 112, rInner30 = 104;
+    for(let deg=0; deg<360; deg+=10){
+      const rad = (deg-90) * Math.PI/180;
+      const isMajor = deg % 30 === 0;
+      const rIn = isMajor ? rInner30 : rInner10;
+      const x1 = cx + rOuter*Math.cos(rad);
+      const y1 = cy + rOuter*Math.sin(rad);
+      const x2 = cx + rIn*Math.cos(rad);
+      const y2 = cy + rIn*Math.sin(rad);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+      line.setAttribute('stroke', isMajor ? 'var(--indigo-bright)' : 'var(--ink-dim)');
+      line.setAttribute('stroke-width', isMajor ? 2 : 1);
+      line.setAttribute('opacity', isMajor ? 0.9 : 0.4);
+      g.appendChild(line);
+
+      if(isMajor && deg % 90 !== 0){
+        const rt = 92;
+        const tx = cx + rt*Math.cos(rad);
+        const ty = cy + rt*Math.sin(rad);
+        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        text.setAttribute('x',tx); text.setAttribute('y',ty+4);
+        text.setAttribute('text-anchor','middle');
+        text.setAttribute('font-size','10');
+        text.setAttribute('font-family','ui-monospace, monospace');
+        text.setAttribute('fill','var(--ink-dim)');
+        text.textContent = deg;
+        g.appendChild(text);
+      }
+    }
+  })();
+
+  function showStatus(msg, kind){
+    statusBanner.textContent = msg;
+    statusBanner.className = 'status show' + (kind ? ' '+kind : '');
+  }
+  function hideStatus(){ statusBanner.className = 'status'; }
+
+  function degToCompassDir(deg){
+    const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+    const idx = Math.round(deg / 45) % 8;
+    return dirs[idx];
+  }
+
+  function shortestDelta(from, to){
+    let diff = (to - from) % 360;
+    if(diff > 180) diff -= 360;
+    if(diff < -180) diff += 360;
+    return diff;
+  }
+
+  function applyHeading(heading){
+    if(smoothedHeading === null){ smoothedHeading = heading; }
+    else {
+      const delta = shortestDelta(smoothedHeading, heading);
+      smoothedHeading += delta;
+    }
+    currentHeading = ((heading % 360) + 360) % 360;
+
+    rose.style.transform = `rotate(${-smoothedHeading}deg)`;
+
+    degReadout.textContent = Math.round(currentHeading) + '°';
+    dirReadout.textContent = degToCompassDir(currentHeading);
+
+    if(mode === 'qibla' && qiblaBearing !== null){
+      const arrowRotate = qiblaBearing - currentHeading;
+      qiblaArrow.style.transform = `rotate(${arrowRotate}deg)`;
+      let diff = Math.round(shortestDelta(currentHeading, qiblaBearing));
+      qiblaDiffEl.textContent = Math.abs(diff) + '°';
+    }
+  }
+
+  function setMode(newMode){
+    mode = newMode;
+    if(mode === 'qibla'){
+      btnQiblaMode.classList.add('active');
+      btnCompassMode.classList.remove('active');
+      qiblaArrow.style.display = 'block';
+      qiblaInfo.classList.add('show');
+      if(userLat !== null) computeQibla();
+      else showStatus('Fetching your location to calculate the Qibla direction…');
+    } else {
+      btnCompassMode.classList.add('active');
+      btnQiblaMode.classList.remove('active');
+      qiblaArrow.style.display = 'none';
+      qiblaInfo.classList.remove('show');
+    }
+  }
+  btnCompassMode.addEventListener('click', ()=>setMode('compass'));
+  btnQiblaMode.addEventListener('click', ()=>setMode('qibla'));
+
+  function computeQibla(){
+    const lat1 = userLat * Math.PI/180;
+    const lon1 = userLon * Math.PI/180;
+    const lat2 = KAABA_LAT * Math.PI/180;
+    const lon2 = KAABA_LON * Math.PI/180;
+    const dLon = lon2 - lon1;
+    const y = Math.sin(dLon) * Math.cos(lat2);
+    const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    let brng = Math.atan2(y,x) * 180/Math.PI;
+    brng = (brng + 360) % 360;
+    qiblaBearing = brng;
+    qiblaDegEl.textContent = Math.round(brng) + '°';
+    hideStatus();
+  }
+
+  function applyTheme(theme){
+    document.body.setAttribute('data-theme', theme);
+    lightBtn.classList.toggle('active', theme === 'light');
+    darkBtn.classList.toggle('active', theme === 'dark');
+  }
+  applyTheme('light');
+  lightBtn.addEventListener('click', ()=>applyTheme('light'));
+  darkBtn.addEventListener('click', ()=>applyTheme('dark'));
+
+  function startGeolocation(){
+    if(!('geolocation' in navigator)){
+      showStatus('This device/browser does not support GPS (Geolocation API).', 'warn');
+      return;
+    }
+    if(geoWatchId !== null) return;
+    geoWatchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
+      enableHighAccuracy:true,
+      maximumAge:5000,
+      timeout:15000
+    });
+  }
+
+  function onPosition(pos){
+    hideStatus();
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    latValue.textContent = userLat.toFixed(6) + '°';
+    lonValue.textContent = userLon.toFixed(6) + '°';
+    altValue.textContent = (pos.coords.altitude !== null && pos.coords.altitude !== undefined)
+      ? Math.round(pos.coords.altitude) + ' m'
+      : 'Not supported on this device';
+    const acc = pos.coords.accuracy;
+    accValue.textContent = acc ? '±' + Math.round(acc) + ' m' : '—';
+
+    if(acc){
+      const scale = Math.min(1.6, Math.max(0.9, acc / 25));
+      accuracyHalo.style.transform = `scale(${scale})`;
+      accuracyHalo.style.opacity = Math.min(0.9, Math.max(0.35, 30/acc));
+    }
+
+    if(mode === 'qibla') computeQibla();
+
+    const key = userLat.toFixed(2)+','+userLon.toFixed(2);
+    if(key !== lastCityKey){
+      lastCityKey = key;
+      reverseGeocode(userLat, userLon);
+    }
+  }
+
+  function onPositionError(err){
+    let msg = 'Unable to retrieve your GPS location.';
+    if(err.code === 1) msg = 'Location access denied. Enable location permission in your browser settings to see coordinates and Qibla direction.';
+    else if(err.code === 2) msg = 'Location unavailable. Make sure GPS / Location Services are turned on.';
+    else if(err.code === 3) msg = 'Location request timed out. Try again in an open outdoor area.';
+    showStatus(msg, 'warn');
+    cityValue.textContent = 'Unavailable';
+  }
+
+  async function reverseGeocode(lat, lon){
+    cityValue.textContent = 'Looking up place name…';
+    try{
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=12&addressdetails=1`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if(!res.ok) throw new Error('network');
+      const data = await res.json();
+      const a = data.address || {};
+      const city = a.city || a.town || a.village || a.county || a.state_district || '';
+      const region = a.state || a.region || '';
+      const country = a.country || '';
+      const parts = [city, region, country].filter(Boolean);
+      cityValue.textContent = parts.length ? parts.join(', ') : (data.display_name || 'Location found');
+    }catch(e){
+      cityValue.textContent = 'Place name unavailable (check internet connection)';
+    }
+  }
+
+  function handleOrientation(event){
+    let heading = null;
+    if(typeof event.webkitCompassHeading === 'number' && !isNaN(event.webkitCompassHeading)){
+      heading = event.webkitCompassHeading;
+    } else if(event.absolute && event.alpha !== null){
+      heading = 360 - event.alpha;
+    } else if(event.alpha !== null){
+      heading = 360 - event.alpha;
+    }
+    if(heading === null || isNaN(heading)) return;
+    hideStatus();
+    applyHeading(heading);
+  }
+
+  function attachOrientationListener(){
+    const eventName = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
+    window.addEventListener(eventName, handleOrientation, true);
+  }
+
+  async function startSensors(){
+    if(sensorStarted){
+      showStatus('Recalibrating… wave your phone in a figure-8 motion a few times.', 'ok');
+      setTimeout(hideStatus, 3000);
+      return;
+    }
+
+    if(typeof DeviceOrientationEvent === 'undefined'){
+      showStatus('This browser does not support the Device Orientation sensor.', 'warn');
+    } else if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+      try{
+        const state = await DeviceOrientationEvent.requestPermission();
+        if(state === 'granted'){
+          attachOrientationListener();
+          sensorStarted = true;
+          showStatus('Heading sensor active.', 'ok');
+          setTimeout(hideStatus, 2000);
+        } else {
+          showStatus('Motion & orientation permission denied. Go to Settings → Safari → Motion & Orientation Access to enable it.', 'warn');
+        }
+      }catch(e){
+        showStatus('Failed to request sensor permission: ' + e.message, 'warn');
+      }
+    } else {
+      attachOrientationListener();
+      sensorStarted = true;
+      showStatus('Heading sensor active. If the direction looks off, wave your phone in a figure-8 motion.', 'ok');
+      setTimeout(hideStatus, 3000);
+    }
+
+    startGeolocation();
+  }
+
+  calibrateBtn.addEventListener('click', startSensors);
+
+  startGeolocation();
+
+  if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function'){
+    attachOrientationListener();
+    sensorStarted = true;
+  } else if(typeof DeviceOrientationEvent === 'undefined'){
+    showStatus('This device does not support the compass sensor (DeviceOrientation API).', 'warn');
+  } else {
+    showStatus('Tap "Start / Calibrate Sensors" to activate the compass.', 'ok');
+  }
+
+})();
+</script>
+</body>
+</html>
