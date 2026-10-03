@@ -1,1011 +1,201 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Kompas — Instrumen Navigasi</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pembuat Set Vektor Otomatis</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
 <style>
-  :root{
-    --bg: #0a0d12;
-    --panel: #10151c;
-    --panel-2: #151b23;
-    --line: #232a34;
-    --face: #e9e6dd;
-    --muted: #6b7480;
-    --muted-2: #4a525e;
-    --amber: #e0a446;
-    --amber-dim: #7a5a2e;
-    --steel: #4d6b85;
-    --danger: #c65b4a;
-  }
-
-  *{ box-sizing: border-box; }
-
-  html, body{
-    margin:0; padding:0; height:100%;
-    background: var(--bg);
-    color: var(--face);
-    font-family: 'Manrope', sans-serif;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  body{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:space-between;
-    min-height:100vh;
-    min-height:100dvh;
-    padding: max(20px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
-    background:
-      radial-gradient(ellipse 120% 60% at 50% -10%, rgba(224,164,70,0.06), transparent 60%),
-      var(--bg);
-  }
-
-  /* ---------- Weather strip ---------- */
-  .weather{
-    width:100%;
-    max-width: 420px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding: 12px 18px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-  }
-
-  .weather .loc{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    min-width:0;
-  }
-  .weather .loc .city{
-    color: var(--face);
-    font-weight:600;
-    font-size: 13px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    max-width: 160px;
-  }
-  .weather .loc .cond{
-    color: var(--muted);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .weather .temp{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--amber);
-    display:flex;
-    align-items:baseline;
-    gap:2px;
-    flex-shrink:0;
-  }
-  .weather .temp .deg{ font-size: 13px; color: var(--muted); }
-  .weather .icon{ font-size: 20px; margin-right: 10px; flex-shrink:0; }
-  .weather .icon-wrap{ display:flex; align-items:center; }
-
-  .weather.loading .temp, .weather.loading .loc .city{ color: var(--muted-2); }
-  .weather .refresh{
-    background:none; border:none; color:var(--muted); cursor:pointer;
-    font-size: 11px; padding: 4px 6px; opacity:0.7; font-family:'IBM Plex Mono',monospace;
-  }
-  .weather .refresh:hover{ color: var(--amber); opacity:1; }
-
-  /* ---------- Center label above compass ---------- */
-  .heading-readout{
-    text-align:center;
-    margin-top: 6px;
-  }
-  .heading-readout .deg-num{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 15vw;
-    max-font-size: 76px;
-    line-height: 1;
-    font-weight: 500;
-    color: var(--face);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-  @media (min-width: 480px){
-    .heading-readout .deg-num{ font-size: 64px; }
-  }
-  .heading-readout .cardinal{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--amber);
-    letter-spacing: 0.25em;
-    margin-top: -4px;
-  }
-
-  /* ---------- Compass ---------- */
-  .compass-wrap{
-    position: relative;
-    width: min(84vw, 340px);
-    height: min(84vw, 340px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-
-  .fixed-pointer{
-    position:absolute;
-    top: -2px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5;
-    width: 0; height:0;
-    border-left: 7px solid transparent;
-    border-right: 7px solid transparent;
-    border-top: 11px solid var(--amber);
-    filter: drop-shadow(0 0 6px rgba(224,164,70,0.5));
-  }
-
-  .dial{
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 50% 42%, #161d26 0%, #0d1319 72%, #0a0f14 100%);
-    border: 1px solid var(--line);
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,0.02) inset,
-      0 30px 60px -20px rgba(0,0,0,0.6),
-      0 0 40px -10px rgba(224,164,70,0.05);
-    transition: transform 0.15s linear;
-    will-change: transform;
-  }
-
-  .tick{
-    position:absolute;
-    left:50%; top:0;
-    width:1px; height: 10px;
-    background: var(--muted-2);
-    transform-origin: 50% 170px;
-  }
-  .tick.major{ height:16px; width:1.5px; background: var(--muted); }
-  .tick.cardinal-tick{ height: 20px; width:2px; background: var(--face); }
-
-  .dial-label{
-    position:absolute;
-    left:50%; top:26px;
-    transform-origin: 50% 144px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-  .dial-label.n{ color: var(--amber); font-weight:600; font-size:15px; }
-  .dial-label span{ display:inline-block; }
-
-  .inner-ring{
-    position:absolute;
-    top: 50%; left:50%;
-    width: 62%; height: 62%;
-    transform: translate(-50%,-50%);
-    border-radius:50%;
-    border: 1px solid var(--line);
-    background: linear-gradient(160deg, #12181f, #0b0f14);
-  }
-
-  .hub{
-    position:absolute;
-    top:50%; left:50%;
-    width: 10px; height:10px;
-    transform: translate(-50%,-50%);
-    border-radius:50%;
-    background: var(--amber);
-    box-shadow: 0 0 12px 2px rgba(224,164,70,0.6);
-    z-index: 4;
-  }
-
-  .needle{
-    position:absolute;
-    top:50%; left:50%;
-    width: 4px;
-    height: 58%;
-    transform: translate(-50%,-100%);
-    transform-origin: 50% 100%;
-    z-index: 3;
-    pointer-events:none;
-  }
-  .needle .half{
-    position:absolute;
-    left:0; width:100%;
-  }
-  .needle .north{
-    top:0; height:56%;
-    background: linear-gradient(to bottom, var(--amber), rgba(224,164,70,0.15));
-    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-  }
-  .needle .south{
-    bottom: 0; height: 42%;
-    top: 58%;
-    background: linear-gradient(to top, var(--steel), rgba(77,107,133,0.15));
-    clip-path: polygon(50% 100%, 100% 0%, 0% 0%);
-  }
-
-  /* ---------- Footer / status & controls ---------- */
-  .footer{
-    width:100%;
-    max-width: 420px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap: 12px;
-  }
-
-  .status{
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    text-align:center;
-    min-height: 14px;
-  }
-
-  .enable-btn{
-    background: var(--panel);
-    border: 1px solid var(--amber-dim);
-    color: var(--amber);
-    padding: 12px 28px;
-    border-radius: 100px;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-  }
-  .enable-btn:active{ transform: scale(0.97); }
-  .enable-btn:hover{ background: var(--panel-2); }
-  .hidden{ display:none !important; }
-
-  .coords{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted-2);
-    letter-spacing: 0.02em;
-  }
+:root{--bg:#EEF0F7;--panel:#fff;--ink:#1B1F3B;--muted:#5d6385;--line:#d3d7e8;--accent:#2433D6;--onaccent:#fff;--tile:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1120;--panel:#181B33;--ink:#EDEEF8;--muted:#9aa0c8;--line:#2c3058;--accent:#8FA2FF;--onaccent:#0F1120;--tile:#181B33}}
+:root[data-theme="dark"]{--bg:#0F1120;--panel:#181B33;--ink:#EDEEF8;--muted:#9aa0c8;--line:#2c3058;--accent:#8FA2FF;--onaccent:#0F1120;--tile:#181B33}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.app{max-width:1100px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:20px}
+h1{font-size:clamp(28px,6vw,44px);line-height:1.05;margin:0 0 6px;font-weight:800;letter-spacing:-.025em}
+.sub{margin:0;color:var(--muted);max-width:52ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:16px;align-content:start}
+.field{display:grid;gap:8px}
+.field>span,.lab{font-size:14px;font-weight:600;display:flex;justify-content:space-between}
+.lab b{font-weight:400;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pals button{border:2px solid var(--line);border-radius:10px;padding:0;overflow:hidden;display:flex;height:36px;cursor:pointer;background:none}
+.pals button[aria-pressed="true"]{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
+.pals i{flex:1}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:flex;gap:8px}
+input[type=text]{flex:1;min-width:0;font:inherit;font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:8px 10px;min-height:40px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.chk input{accent-color:var(--accent);width:18px;height:18px}
+.btn.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:600}
+.out{display:grid;gap:12px;align-content:start;min-width:0}
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.bar p{margin:0;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.tile{padding:0;border:1px solid var(--line);background:var(--tile);border-radius:14px;cursor:pointer;aspect-ratio:1;display:block;overflow:hidden;transition:transform .15s}
+.tile:hover{transform:translateY(-2px)}
+.tile svg{display:block;width:100%;height:100%}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.on{opacity:1}
+@media (min-width:820px){.app{grid-template-columns:300px 1fr;padding-top:36px}header{grid-column:1/-1}.panel{position:sticky;top:16px}}
+@media (prefers-reduced-motion:reduce){.tile,#toast{transition:none}}
 </style>
 </head>
 <body>
+<main class="app">
+<header>
+<h1>Set vektor otomatis</h1>
+<p class="sub">Atur gaya dan palet, set SVG baru langsung tersusun. Unduh satu per satu atau satu set penuh.</p>
+</header>
 
-  <div class="weather loading" id="weather">
-    <div class="icon-wrap">
-      <span class="icon" id="weatherIcon">◌</span>
-      <div class="loc">
-        <span class="city" id="weatherCity">Mencari lokasi…</span>
-        <span class="cond" id="weatherCond">—</span>
-      </div>
-    </div>
-    <div class="temp"><span id="weatherTemp">--</span><span class="deg">°C</span></div>
-  </div>
+<section class="panel" aria-label="Pengaturan">
+<div class="field"><span>Gaya</span>
+<div class="seg" id="styles"></div></div>
+<div class="field"><span>Palet</span><div class="pals" id="pals"></div></div>
+<label class="field"><span class="lab">Jumlah <b id="nv"></b></span><input type="range" id="n" min="4" max="36" value="12"></label>
+<label class="field"><span class="lab">Tebal garis <b id="sv"></b></span><input type="range" id="sw" min="2" max="9" value="4"></label>
+<label class="chk"><input type="checkbox" id="bg" checked>Pakai latar warna</label>
+<div class="field"><span>Seed</span>
+<div class="row"><input type="text" id="seed" value="bintang" aria-label="Seed"><button class="btn" id="rand">Acak ulang</button></div></div>
+</section>
 
-  <div class="heading-readout">
-    <div class="deg-num"><span id="headingNum">000</span>°</div>
-    <div class="cardinal" id="headingCardinal">N</div>
-  </div>
-
-  <div class="compass-wrap">
-    <div class="fixed-pointer"></div>
-    <div class="dial" id="dial">
-      <!-- ticks + labels generated by JS -->
-      <div class="inner-ring"></div>
-      <div class="needle" id="needle">
-        <div class="half north"></div>
-        <div class="half south"></div>
-      </div>
-      <div class="hub"></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div class="coords" id="coords">— — , — —</div>
-    <button class="enable-btn hidden" id="enableBtn">Aktifkan Sensor Kompas</button>
-    <div class="status" id="status">Menunggu izin sensor…</div>
-  </div>
+<section class="out" aria-label="Hasil">
+<div class="bar"><p id="info"></p><button class="btn primary" id="all">Unduh set (SVG)</button></div>
+<div class="grid" id="grid"></div>
+</section>
+</main>
+<div id="toast" role="status"></div>
 
 <script>
-(function(){
-  const dial = document.getElementById('dial');
-  const headingNum = document.getElementById('headingNum');
-  const headingCardinal = document.getElementById('headingCardinal');
-  const statusEl = document.getElementById('status');
-  const enableBtn = document.getElementById('enableBtn');
-  const coordsEl = document.getElementById('coords');
+const $=s=>document.querySelector(s);
+const PAL=[
+["Senja",["#2B1B3D","#FF6B6B","#FFB347","#FFE66D","#8E7CC3"]],
+["Laut",["#0B2545","#13A8A8","#8DDBE0","#EEF4ED","#F25F5C"]],
+["Hutan",["#14301F","#6FB36B","#E9D758","#F2E9DC","#D1603D"]],
+["Permen",["#FFF1F5","#FF5D8F","#5B8DEF","#FFC857","#3DDC97"]],
+["Mono",["#111111","#FFFFFF","#BDBDBD","#7A7A7A","#E8E8E8"]],
+["Kobalt",["#EDEFFA","#2433D6","#FF4F2E","#1B1F3B","#8FA2FF"]]];
+const STY=[["geo","Geometris"],["org","Organik"],["line","Garis"],["pat","Pola"],["mix","Campur"]];
+const st={style:"geo",pal:0,n:12,sw:4,bg:true,seed:"bintang"};
+const f=x=>+x.toFixed(1);
+const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const pk=(r,c)=>c[1+Math.floor(r()*(c.length-1))];
+const A=(col,sw)=>`fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"`;
 
-  // ---------- Build dial ticks & labels ----------
-  const cardinals = [
-    {deg:0, label:'N', cls:'n'},
-    {deg:45, label:'NE'},
-    {deg:90, label:'E'},
-    {deg:135, label:'SE'},
-    {deg:180, label:'S'},
-    {deg:225, label:'SW'},
-    {deg:270, label:'W'},
-    {deg:315, label:'NW'},
-  ];
-
-  for(let d=0; d<360; d+=5){
-    const t = document.createElement('div');
-    t.className = 'tick';
-    if(d % 90 === 0) t.className = 'tick cardinal-tick';
-    else if(d % 30 === 0) t.className = 'tick major';
-    t.style.transform = `translateX(-50%) rotate(${d}deg)`;
-    dial.appendChild(t);
+function blob(r,cx,cy,R,col){
+  const n=6+Math.floor(r()*3),P=[];
+  for(let i=0;i<n;i++){const a=i/n*6.2832,d=R*(.65+r()*.45);P.push([cx+Math.cos(a)*d,cy+Math.sin(a)*d])}
+  let d=`M${f(P[0][0])} ${f(P[0][1])}`;
+  for(let i=0;i<n;i++){
+    const p0=P[(i-1+n)%n],p1=P[i],p2=P[(i+1)%n],p3=P[(i+2)%n];
+    d+=`C${f(p1[0]+(p2[0]-p0[0])/6)} ${f(p1[1]+(p2[1]-p0[1])/6)} ${f(p2[0]-(p3[0]-p1[0])/6)} ${f(p2[1]-(p3[1]-p1[1])/6)} ${f(p2[0])} ${f(p2[1])}`;
   }
+  return `<path d="${d}Z" fill="${col}"/>`;
+}
 
-  cardinals.forEach(c => {
-    const l = document.createElement('div');
-    l.className = 'dial-label' + (c.cls ? ' ' + c.cls : '');
-    l.style.transform = `translateX(-50%) rotate(${c.deg}deg)`;
-    const inner = document.createElement('span');
-    inner.textContent = c.label;
-    inner.style.display = 'inline-block';
-    inner.style.transform = `rotate(${-c.deg}deg)`;
-    l.appendChild(inner);
-    dial.appendChild(l);
-  });
-
-  // ---------- Compass logic ----------
-  const cardinalNames = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-  function cardinalFromDeg(deg){
-    const idx = Math.round(deg / 22.5) % 16;
-    return cardinalNames[idx];
+const G={
+geo(r,c){
+  const k=2+Math.floor(r()*3);let o="";
+  for(let i=0;i<k;i++){
+    const col=pk(r,c),t=Math.floor(r()*6),x=20+r()*60,y=20+r()*60,s=14+r()*26;
+    if(t==0)o+=`<circle cx="${f(x)}" cy="${f(y)}" r="${f(s)}" fill="${col}"/>`;
+    else if(t==1)o+=`<rect x="${f(x-s)}" y="${f(y-s)}" width="${f(s*2)}" height="${f(s*(1+r()))}" rx="${f(r()*s/2)}" fill="${col}"/>`;
+    else if(t==2)o+=`<path d="M${f(x)} ${f(y-s)}L${f(x+s)} ${f(y+s)}L${f(x-s)} ${f(y+s)}Z" fill="${col}"/>`;
+    else if(t==3)o+=`<path d="M${f(x-s)} ${f(y)}a${f(s)} ${f(s)} 0 0 1 ${f(s*2)} 0Z" fill="${col}"/>`;
+    else if(t==4)o+=`<circle cx="${f(x)}" cy="${f(y)}" r="${f(s*.8)}" fill="none" stroke="${col}" stroke-width="${f(s/2.2)}"/>`;
+    else o+=`<path d="M${f(x)} ${f(y-s)}L${f(x+s)} ${f(y)}L${f(x)} ${f(y+s)}L${f(x-s)} ${f(y)}Z" fill="${col}"/>`;
   }
+  return o;
+},
+org(r,c){
+  let o=blob(r,50,50,34,pk(r,c));
+  const k=1+Math.floor(r()*2);
+  for(let i=0;i<k;i++)o+=blob(r,25+r()*50,25+r()*50,10+r()*14,pk(r,c));
+  return o;
+},
+line(r,c,sw){
+  const col=pk(r,c),col2=pk(r,c),t=Math.floor(r()*4);let o="";
+  if(t==0){const k=3+Math.floor(r()*2);
+    for(let i=1;i<=k;i++)o+=`<circle cx="50" cy="50" r="${f(i*40/k)}" ${A(i%2?col:col2,sw)}/>`;}
+  else if(t==1){const k=4,amp=6+r()*12;
+    for(let i=0;i<k;i++){const y=20+i*20;o+=`<path d="M8 ${y}Q29 ${f(y-amp)} 50 ${y}T92 ${y}" ${A(i%2?col:col2,sw)}/>`;}}
+  else if(t==2){
+    for(let j=0;j<2;j++){let d="";for(let i=0;i<6;i++)d+=`${i?"L":"M"}${10+i*16} ${j?66+(i%2?-14:0):34+(i%2?14:0)}`;
+      o+=`<path d="${d}" ${A(j?col2:col,sw)}/>`;}}
+  else{const n=6+Math.floor(r()*5);
+    for(let i=0;i<n;i++){const a=i/n*6.2832,ca=Math.cos(a),sa=Math.sin(a);
+      o+=`<path d="M${f(50+ca*14)} ${f(50+sa*14)}L${f(50+ca*40)} ${f(50+sa*40)}" ${A(i%2?col:col2,sw)}/>`;}}
+  return o;
+},
+pat(r,c,sw){
+  const col=pk(r,c),col2=pk(r,c),t=Math.floor(r()*3);let o="";
+  if(t==0){
+    for(let y=0;y<5;y++)for(let x=0;x<5;x++)o+=`<circle cx="${10+x*20}" cy="${10+y*20}" r="${f(2+r()*6)}" fill="${(x+y)%2?col:col2}"/>`;}
+  else if(t==1){
+    for(let y=0;y<4;y++)for(let x=0;x<4;x++){
+      const ox=x*25,oy=y*25,fl=r()<.5,a=`a12.5 12.5 0 0 `;
+      o+=fl?`<path d="M${ox+12.5} ${oy}${a}1 -12.5 12.5M${ox+25} ${oy+12.5}${a}0 -12.5 12.5" ${A(col,sw)}/>`
+            :`<path d="M${ox+12.5} ${oy}${a}0 12.5 12.5M${ox} ${oy+12.5}${a}1 12.5 12.5" ${A(col,sw)}/>`;}}
+  else{
+    for(let i=0;i<8;i++){const x=i*16-20;o+=`<path d="M${x} 100L${x+100} 0" ${A(i%2?col:col2,sw*1.6)}/>`;}}
+  return o;
+}};
 
-  let currentRotation = 0;
-  function setHeading(heading){
-    heading = ((heading % 360) + 360) % 360;
-    headingNum.textContent = String(Math.round(heading)).padStart(3,'0');
-    headingCardinal.textContent = cardinalFromDeg(heading);
-    // rotate dial opposite to heading so North always points true north
-    let target = -heading;
-    // shortest-path rotation to avoid spin-back
-    let diff = target - currentRotation;
-    diff = ((diff + 180) % 360 + 360) % 360 - 180;
-    currentRotation += diff;
-    dial.style.transform = `rotate(${currentRotation}deg)`;
-  }
+function inner(i){
+  const r=rng(hash(st.seed)+i*7919),c=PAL[st.pal][1];
+  let s=st.style;
+  if(s=="mix")s=["geo","org","line","pat"][Math.floor(r()*4)];
+  return (st.bg?`<rect width="100" height="100" rx="14" fill="${c[0]}"/>`:"")+G[s](r,c,st.sw);
+}
+const one=i=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">${inner(i)}</svg>`;
+function sheet(){
+  const cols=Math.min(st.n,6),rows=Math.ceil(st.n/cols),W=cols*108-8,H=rows*108-8;
+  let o=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W*4}" height="${H*4}">`;
+  for(let i=0;i<st.n;i++)o+=`<svg x="${(i%cols)*108}" y="${Math.floor(i/cols)*108}" width="100" height="100" viewBox="0 0 100 100">${inner(i)}</svg>`;
+  return o+"</svg>";
+}
 
-  function handleOrientation(e){
-    let heading;
-    if(typeof e.webkitCompassHeading === 'number'){
-      heading = e.webkitCompassHeading; // iOS, already true-north-relative
-    } else if(e.alpha !== null){
-      heading = 360 - e.alpha; // approximate
-    } else {
-      return;
-    }
-    statusEl.textContent = 'Sensor aktif';
-    setHeading(heading);
-  }
+function render(){
+  $("#nv").textContent=st.n;$("#sv").textContent=st.sw;
+  let h="";
+  for(let i=0;i<st.n;i++)h+=`<button class="tile" data-i="${i}" aria-label="Unduh vektor ${i+1}" title="Klik untuk unduh"><svg viewBox="0 0 100 100">${inner(i)}</svg></button>`;
+  $("#grid").innerHTML=h;
+  $("#info").textContent=`${st.n} vektor. Klik satu kotak untuk mengunduhnya.`;
+}
 
-  function startListening(){
-    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-    window.addEventListener('deviceorientation', handleOrientation, true);
-  }
+let tt;
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600)}
+let dlp;
+const dl=()=>dlp||(dlp=(window.claude&&claude.use?claude.use("downloads"):Promise.resolve(null)).catch(()=>null));
+async function save(name,data){
+  const d=await dl();
+  if(!d){toast("Unduhan tidak tersedia di tampilan ini");return}
+  try{await d.save({filename:name,data});toast("Tersimpan: "+name)}
+  catch(e){if(!e||e.code!=="declined")toast("Gagal mengunduh ("+((e&&e.code)||"error")+")")}
+}
 
-  function needsIOSPermission(){
-    return typeof DeviceOrientationEvent !== 'undefined' &&
-           typeof DeviceOrientationEvent.requestPermission === 'function';
-  }
-
-  if(needsIOSPermission()){
-    enableBtn.classList.remove('hidden');
-    statusEl.textContent = 'Ketuk tombol untuk mengizinkan akses sensor';
-    enableBtn.addEventListener('click', () => {
-      DeviceOrientationEvent.requestPermission().then(res => {
-        if(res === 'granted'){
-          enableBtn.classList.add('hidden');
-          startListening();
-        } else {
-          statusEl.textContent = 'Izin ditolak — kompas berjalan mode manual';
-          enableDemoMode();
-        }
-      }).catch(() => {
-        statusEl.textContent = 'Sensor tidak tersedia — mode manual';
-        enableDemoMode();
-      });
-    });
-  } else if(window.DeviceOrientationEvent){
-    startListening();
-    // fallback: if no event fires within 2s, assume no sensor
-    let gotEvent = false;
-    window.addEventListener('deviceorientation', () => gotEvent = true, {once:true});
-    setTimeout(() => {
-      if(!gotEvent){
-        statusEl.textContent = 'Sensor tidak terdeteksi — geser untuk mode manual';
-        enableDemoMode();
-      }
-    }, 2000);
-  } else {
-    statusEl.textContent = 'Perangkat tidak mendukung sensor — geser untuk mode manual';
-    enableDemoMode();
-  }
-
-  // ---------- Manual / demo mode (drag to rotate) ----------
-  function enableDemoMode(){
-    let dragging = false;
-    let lastAngle = 0;
-    let heading = 0;
-    const wrap = document.querySelector('.compass-wrap');
-
-    function angleFromEvent(clientX, clientY){
-      const rect = wrap.getBoundingClientRect();
-      const cx = rect.left + rect.width/2;
-      const cy = rect.top + rect.height/2;
-      return Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI;
-    }
-
-    function onDown(x,y){ dragging = true; lastAngle = angleFromEvent(x,y); }
-    function onMove(x,y){
-      if(!dragging) return;
-      const a = angleFromEvent(x,y);
-      let delta = a - lastAngle;
-      lastAngle = a;
-      heading = ((heading - delta) % 360 + 360) % 360;
-      setHeading(heading);
-    }
-    function onUp(){ dragging = false; }
-
-    wrap.style.cursor = 'grab';
-    wrap.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
-    window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-    window.addEventListener('mouseup', onUp);
-    wrap.addEventListener('touchstart', e => { const t=e.touches[0]; onDown(t.clientX, t.clientY); }, {passive:true});
-    wrap.addEventListener('touchmove', e => { const t=e.touches[0]; onMove(t.clientX, t.clientY); }, {passive:true});
-    wrap.addEventListener('touchend', onUp);
-
-    setHeading(0);
-  }
-
-  // ---------- Weather ----------
-  const weatherEl = document.getElementById('weather');
-  const wCity = document.getElementById('weatherCity');
-  const wCond = document.getElementById('weatherCond');
-  const wTemp = document.getElementById('weatherTemp');
-  const wIcon = document.getElementById('weatherIcon');
-
-  const weatherCodeMap = {
-    0: ['Cerah','☀️'], 1: ['Cerah Berawan','🌤️'], 2: ['Berawan Sebagian','⛅'], 3: ['Mendung','☁️'],
-    45: ['Berkabut','🌫️'], 48: ['Kabut Es','🌫️'],
-    51: ['Gerimis Ringan','🌦️'], 53: ['Gerimis','🌦️'], 55: ['Gerimis Lebat','🌧️'],
-    61: ['Hujan Ringan','🌧️'], 63: ['Hujan','🌧️'], 65: ['Hujan Lebat','🌧️'],
-    71: ['Salju Ringan','🌨️'], 73: ['Salju','🌨️'], 75: ['Salju Lebat','❄️'],
-    80: ['Hujan Sesaat','🌦️'], 81: ['Hujan Deras Sesaat','🌧️'], 82: ['Hujan Sangat Deras','⛈️'],
-    95: ['Badai Petir','⛈️'], 96: ['Badai Petir + Es','⛈️'], 99: ['Badai Petir Hebat','⛈️'],
-  };
-
-  function fmtCoord(lat, lon){
-    const ns = lat >= 0 ? 'N' : 'S';
-    const ew = lon >= 0 ? 'E' : 'W';
-    return `${Math.abs(lat).toFixed(3)}°${ns}, ${Math.abs(lon).toFixed(3)}°${ew}`;
-  }
-
-  async function loadWeather(lat, lon){
-    coordsEl.textContent = fmtCoord(lat, lon);
-    try{
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`);
-      const data = await res.json();
-      const code = data.current.weather_code;
-      const temp = Math.round(data.current.temperature_2m);
-      const [label, icon] = weatherCodeMap[code] || ['Tidak diketahui','🌡️'];
-      wTemp.textContent = temp;
-      wCond.textContent = label;
-      wIcon.textContent = icon;
-      weatherEl.classList.remove('loading');
-
-      // reverse geocode for city name
-      try{
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=id`);
-        const geoData = await geoRes.json();
-        if(geoData.results && geoData.results.length){
-          const r = geoData.results[0];
-          wCity.textContent = r.name + (r.admin1 ? ', ' + r.admin1 : '');
-        } else {
-          wCity.textContent = fmtCoord(lat, lon);
-        }
-      } catch(e){
-        wCity.textContent = fmtCoord(lat, lon);
-      }
-    } catch(e){
-      wCity.textContent = 'Cuaca tidak tersedia';
-      wCond.textContent = 'Periksa koneksi';
-      wIcon.textContent = '⚠️';
-      weatherEl.classList.remove('loading');
-    }
-  }
-
-  function initWeather(){
-    if(!navigator.geolocation){
-      wCity.textContent = 'Lokasi tidak didukung';
-      weatherEl.classList.remove('loading');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos => loadWeather(pos.coords.latitude, pos.coords.longitude),
-      err => {
-        wCity.textContent = 'Izin lokasi ditolak';
-        wCond.textContent = 'Ketuk untuk coba lagi';
-        wIcon.textContent = '📍';
-        weatherEl.classList.remove('loading');
-        weatherEl.style.cursor = 'pointer';
-        weatherEl.addEventListener('click', initWeather, {once:true});
-      },
-      { enableHighAccuracy:false, timeout: 8000 }
-    );
-  }
-
-  initWeather();
-  setHeading(0);
-})();
-</script>
-</body>
-</html>
-
-  .weather .refresh:hover{ color: var(--amber); opacity:1; }
-
-  /* ---------- Center label above compass ---------- */
-  .heading-readout{
-    text-align:center;
-    margin-top: 6px;
-  }
-  .heading-readout .deg-num{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 15vw;
-    max-font-size: 76px;
-    line-height: 1;
-    font-weight: 500;
-    color: var(--face);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-  @media (min-width: 480px){
-    .heading-readout .deg-num{ font-size: 64px; }
-  }
-  .heading-readout .cardinal{
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: var(--amber);
-    letter-spacing: 0.25em;
-    margin-top: -4px;
-  }
-
-  /* ---------- Compass ---------- */
-  .compass-wrap{
-    position: relative;
-    width: min(84vw, 340px);
-    height: min(84vw, 340px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-
-  .fixed-pointer{
-    position:absolute;
-    top: -2px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 5;
-    width: 0; height:0;
-    border-left: 7px solid transparent;
-    border-right: 7px solid transparent;
-    border-top: 11px solid var(--amber);
-    filter: drop-shadow(0 0 6px rgba(224,164,70,0.5));
-  }
-
-  .dial{
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 50% 42%, #161d26 0%, #0d1319 72%, #0a0f14 100%);
-    border: 1px solid var(--line);
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,0.02) inset,
-      0 30px 60px -20px rgba(0,0,0,0.6),
-      0 0 40px -10px rgba(224,164,70,0.05);
-    transition: transform 0.15s linear;
-    will-change: transform;
-  }
-
-  .tick{
-    position:absolute;
-    left:50%; top:0;
-    width:1px; height: 10px;
-    background: var(--muted-2);
-    transform-origin: 50% 170px;
-  }
-  .tick.major{ height:16px; width:1.5px; background: var(--muted); }
-  .tick.cardinal-tick{ height: 20px; width:2px; background: var(--face); }
-
-  .dial-label{
-    position:absolute;
-    left:50%; top:26px;
-    transform-origin: 50% 144px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
-  .dial-label.n{ color: var(--amber); font-weight:600; font-size:15px; }
-  .dial-label span{ display:inline-block; }
-
-  .inner-ring{
-    position:absolute;
-    top: 50%; left:50%;
-    width: 62%; height: 62%;
-    transform: translate(-50%,-50%);
-    border-radius:50%;
-    border: 1px solid var(--line);
-    background: linear-gradient(160deg, #12181f, #0b0f14);
-  }
-
-  .hub{
-    position:absolute;
-    top:50%; left:50%;
-    width: 10px; height:10px;
-    transform: translate(-50%,-50%);
-    border-radius:50%;
-    background: var(--amber);
-    box-shadow: 0 0 12px 2px rgba(224,164,70,0.6);
-    z-index: 4;
-  }
-
-  .needle{
-    position:absolute;
-    top:50%; left:50%;
-    width: 4px;
-    height: 58%;
-    transform: translate(-50%,-100%);
-    transform-origin: 50% 100%;
-    z-index: 3;
-    pointer-events:none;
-  }
-  .needle .half{
-    position:absolute;
-    left:0; width:100%;
-  }
-  .needle .north{
-    top:0; height:56%;
-    background: linear-gradient(to bottom, var(--amber), rgba(224,164,70,0.15));
-    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-  }
-  .needle .south{
-    bottom: 0; height: 42%;
-    top: 58%;
-    background: linear-gradient(to top, var(--steel), rgba(77,107,133,0.15));
-    clip-path: polygon(50% 100%, 100% 0%, 0% 0%);
-  }
-
-  /* ---------- Footer / status & controls ---------- */
-  .footer{
-    width:100%;
-    max-width: 420px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap: 12px;
-  }
-
-  .status{
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    text-align:center;
-    min-height: 14px;
-  }
-
-  .enable-btn{
-    background: var(--panel);
-    border: 1px solid var(--amber-dim);
-    color: var(--amber);
-    padding: 12px 28px;
-    border-radius: 100px;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-  }
-  .enable-btn:active{ transform: scale(0.97); }
-  .enable-btn:hover{ background: var(--panel-2); }
-  .hidden{ display:none !important; }
-
-  .coords{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted-2);
-    letter-spacing: 0.02em;
-  }
-</style>
-</head>
-<body>
-
-  <div class="weather loading" id="weather">
-    <div class="icon-wrap">
-      <span class="icon" id="weatherIcon">◌</span>
-      <div class="loc">
-        <span class="city" id="weatherCity">Mencari lokasi…</span>
-        <span class="cond" id="weatherCond">—</span>
-      </div>
-    </div>
-    <div class="temp"><span id="weatherTemp">--</span><span class="deg">°C</span></div>
-  </div>
-
-  <div class="heading-readout">
-    <div class="deg-num"><span id="headingNum">000</span>°</div>
-    <div class="cardinal" id="headingCardinal">N</div>
-  </div>
-
-  <div class="compass-wrap">
-    <div class="fixed-pointer"></div>
-    <div class="dial" id="dial">
-      <!-- ticks + labels generated by JS -->
-      <div class="inner-ring"></div>
-      <div class="needle" id="needle">
-        <div class="half north"></div>
-        <div class="half south"></div>
-      </div>
-      <div class="hub"></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div class="coords" id="coords">— — , — —</div>
-    <button class="enable-btn hidden" id="enableBtn">Aktifkan Sensor Kompas</button>
-    <div class="status" id="status">Menunggu izin sensor…</div>
-  </div>
-
-<script>
-(function(){
-  const dial = document.getElementById('dial');
-  const headingNum = document.getElementById('headingNum');
-  const headingCardinal = document.getElementById('headingCardinal');
-  const statusEl = document.getElementById('status');
-  const enableBtn = document.getElementById('enableBtn');
-  const coordsEl = document.getElementById('coords');
-
-  // ---------- Build dial ticks & labels ----------
-  const cardinals = [
-    {deg:0, label:'N', cls:'n'},
-    {deg:45, label:'NE'},
-    {deg:90, label:'E'},
-    {deg:135, label:'SE'},
-    {deg:180, label:'S'},
-    {deg:225, label:'SW'},
-    {deg:270, label:'W'},
-    {deg:315, label:'NW'},
-  ];
-
-  for(let d=0; d<360; d+=5){
-    const t = document.createElement('div');
-    t.className = 'tick';
-    if(d % 90 === 0) t.className = 'tick cardinal-tick';
-    else if(d % 30 === 0) t.className = 'tick major';
-    t.style.transform = `translateX(-50%) rotate(${d}deg)`;
-    dial.appendChild(t);
-  }
-
-  cardinals.forEach(c => {
-    const l = document.createElement('div');
-    l.className = 'dial-label' + (c.cls ? ' ' + c.cls : '');
-    l.style.transform = `translateX(-50%) rotate(${c.deg}deg)`;
-    const inner = document.createElement('span');
-    inner.textContent = c.label;
-    inner.style.display = 'inline-block';
-    inner.style.transform = `rotate(${-c.deg}deg)`;
-    l.appendChild(inner);
-    dial.appendChild(l);
-  });
-
-  // ---------- Compass logic ----------
-  const cardinalNames = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-  function cardinalFromDeg(deg){
-    const idx = Math.round(deg / 22.5) % 16;
-    return cardinalNames[idx];
-  }
-
-  let currentRotation = 0;
-  function setHeading(heading){
-    heading = ((heading % 360) + 360) % 360;
-    headingNum.textContent = String(Math.round(heading)).padStart(3,'0');
-    headingCardinal.textContent = cardinalFromDeg(heading);
-    // rotate dial opposite to heading so North always points true north
-    let target = -heading;
-    // shortest-path rotation to avoid spin-back
-    let diff = target - currentRotation;
-    diff = ((diff + 180) % 360 + 360) % 360 - 180;
-    currentRotation += diff;
-    dial.style.transform = `rotate(${currentRotation}deg)`;
-  }
-
-  function handleOrientation(e){
-    let heading;
-    if(typeof e.webkitCompassHeading === 'number'){
-      heading = e.webkitCompassHeading; // iOS, already true-north-relative
-    } else if(e.alpha !== null){
-      heading = 360 - e.alpha; // approximate
-    } else {
-      return;
-    }
-    statusEl.textContent = 'Sensor aktif';
-    setHeading(heading);
-  }
-
-  function startListening(){
-    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-    window.addEventListener('deviceorientation', handleOrientation, true);
-  }
-
-  function needsIOSPermission(){
-    return typeof DeviceOrientationEvent !== 'undefined' &&
-           typeof DeviceOrientationEvent.requestPermission === 'function';
-  }
-
-  if(needsIOSPermission()){
-    enableBtn.classList.remove('hidden');
-    statusEl.textContent = 'Ketuk tombol untuk mengizinkan akses sensor';
-    enableBtn.addEventListener('click', () => {
-      DeviceOrientationEvent.requestPermission().then(res => {
-        if(res === 'granted'){
-          enableBtn.classList.add('hidden');
-          startListening();
-        } else {
-          statusEl.textContent = 'Izin ditolak — kompas berjalan mode manual';
-          enableDemoMode();
-        }
-      }).catch(() => {
-        statusEl.textContent = 'Sensor tidak tersedia — mode manual';
-        enableDemoMode();
-      });
-    });
-  } else if(window.DeviceOrientationEvent){
-    startListening();
-    // fallback: if no event fires within 2s, assume no sensor
-    let gotEvent = false;
-    window.addEventListener('deviceorientation', () => gotEvent = true, {once:true});
-    setTimeout(() => {
-      if(!gotEvent){
-        statusEl.textContent = 'Sensor tidak terdeteksi — geser untuk mode manual';
-        enableDemoMode();
-      }
-    }, 2000);
-  } else {
-    statusEl.textContent = 'Perangkat tidak mendukung sensor — geser untuk mode manual';
-    enableDemoMode();
-  }
-
-  // ---------- Manual / demo mode (drag to rotate) ----------
-  function enableDemoMode(){
-    let dragging = false;
-    let lastAngle = 0;
-    let heading = 0;
-    const wrap = document.querySelector('.compass-wrap');
-
-    function angleFromEvent(clientX, clientY){
-      const rect = wrap.getBoundingClientRect();
-      const cx = rect.left + rect.width/2;
-      const cy = rect.top + rect.height/2;
-      return Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI;
-    }
-
-    function onDown(x,y){ dragging = true; lastAngle = angleFromEvent(x,y); }
-    function onMove(x,y){
-      if(!dragging) return;
-      const a = angleFromEvent(x,y);
-      let delta = a - lastAngle;
-      lastAngle = a;
-      heading = ((heading - delta) % 360 + 360) % 360;
-      setHeading(heading);
-    }
-    function onUp(){ dragging = false; }
-
-    wrap.style.cursor = 'grab';
-    wrap.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
-    window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-    window.addEventListener('mouseup', onUp);
-    wrap.addEventListener('touchstart', e => { const t=e.touches[0]; onDown(t.clientX, t.clientY); }, {passive:true});
-    wrap.addEventListener('touchmove', e => { const t=e.touches[0]; onMove(t.clientX, t.clientY); }, {passive:true});
-    wrap.addEventListener('touchend', onUp);
-
-    setHeading(0);
-  }
-
-  // ---------- Weather ----------
-  const weatherEl = document.getElementById('weather');
-  const wCity = document.getElementById('weatherCity');
-  const wCond = document.getElementById('weatherCond');
-  const wTemp = document.getElementById('weatherTemp');
-  const wIcon = document.getElementById('weatherIcon');
-
-  const weatherCodeMap = {
-    0: ['Cerah','☀️'], 1: ['Cerah Berawan','🌤️'], 2: ['Berawan Sebagian','⛅'], 3: ['Mendung','☁️'],
-    45: ['Berkabut','🌫️'], 48: ['Kabut Es','🌫️'],
-    51: ['Gerimis Ringan','🌦️'], 53: ['Gerimis','🌦️'], 55: ['Gerimis Lebat','🌧️'],
-    61: ['Hujan Ringan','🌧️'], 63: ['Hujan','🌧️'], 65: ['Hujan Lebat','🌧️'],
-    71: ['Salju Ringan','🌨️'], 73: ['Salju','🌨️'], 75: ['Salju Lebat','❄️'],
-    80: ['Hujan Sesaat','🌦️'], 81: ['Hujan Deras Sesaat','🌧️'], 82: ['Hujan Sangat Deras','⛈️'],
-    95: ['Badai Petir','⛈️'], 96: ['Badai Petir + Es','⛈️'], 99: ['Badai Petir Hebat','⛈️'],
-  };
-
-  function fmtCoord(lat, lon){
-    const ns = lat >= 0 ? 'N' : 'S';
-    const ew = lon >= 0 ? 'E' : 'W';
-    return `${Math.abs(lat).toFixed(3)}°${ns}, ${Math.abs(lon).toFixed(3)}°${ew}`;
-  }
-
-  async function loadWeather(lat, lon){
-    coordsEl.textContent = fmtCoord(lat, lon);
-    try{
-      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`);
-      const data = await res.json();
-      const code = data.current.weather_code;
-      const temp = Math.round(data.current.temperature_2m);
-      const [label, icon] = weatherCodeMap[code] || ['Tidak diketahui','🌡️'];
-      wTemp.textContent = temp;
-      wCond.textContent = label;
-      wIcon.textContent = icon;
-      weatherEl.classList.remove('loading');
-
-      // reverse geocode for city name
-      try{
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=id`);
-        const geoData = await geoRes.json();
-        if(geoData.results && geoData.results.length){
-          const r = geoData.results[0];
-          wCity.textContent = r.name + (r.admin1 ? ', ' + r.admin1 : '');
-        } else {
-          wCity.textContent = fmtCoord(lat, lon);
-        }
-      } catch(e){
-        wCity.textContent = fmtCoord(lat, lon);
-      }
-    } catch(e){
-      wCity.textContent = 'Cuaca tidak tersedia';
-      wCond.textContent = 'Periksa koneksi';
-      wIcon.textContent = '⚠️';
-      weatherEl.classList.remove('loading');
-    }
-  }
-
-  function initWeather(){
-    if(!navigator.geolocation){
-      wCity.textContent = 'Lokasi tidak didukung';
-      weatherEl.classList.remove('loading');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos => loadWeather(pos.coords.latitude, pos.coords.longitude),
-      err => {
-        wCity.textContent = 'Izin lokasi ditolak';
-        wCond.textContent = 'Ketuk untuk coba lagi';
-        wIcon.textContent = '📍';
-        weatherEl.classList.remove('loading');
-        weatherEl.style.cursor = 'pointer';
-        weatherEl.addEventListener('click', initWeather, {once:true});
-      },
-      { enableHighAccuracy:false, timeout: 8000 }
-    );
-  }
-
-  initWeather();
-  setHeading(0);
-})();
+// kontrol
+$("#styles").innerHTML=STY.map(([k,l])=>`<button data-s="${k}" aria-pressed="${k==st.style}">${l}</button>`).join("");
+$("#pals").innerHTML=PAL.map(([n,c],i)=>`<button data-p="${i}" title="${n}" aria-label="Palet ${n}" aria-pressed="${i==st.pal}">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</button>`).join("");
+$("#styles").onclick=e=>{const b=e.target.closest("button");if(!b)return;st.style=b.dataset.s;
+  document.querySelectorAll("#styles button").forEach(x=>x.setAttribute("aria-pressed",x==b));render()};
+$("#pals").onclick=e=>{const b=e.target.closest("button");if(!b)return;st.pal=+b.dataset.p;
+  document.querySelectorAll("#pals button").forEach(x=>x.setAttribute("aria-pressed",x==b));render()};
+$("#n").oninput=e=>{st.n=+e.target.value;render()};
+$("#sw").oninput=e=>{st.sw=+e.target.value;render()};
+$("#bg").onchange=e=>{st.bg=e.target.checked;render()};
+$("#seed").oninput=e=>{st.seed=e.target.value||"0";render()};
+$("#rand").onclick=()=>{st.seed=Math.random().toString(36).slice(2,8);$("#seed").value=st.seed;render()};
+$("#grid").onclick=e=>{const b=e.target.closest(".tile");if(b)save(`vektor-${+b.dataset.i+1}.svg`,one(+b.dataset.i))};
+$("#all").onclick=()=>save("set-vektor.svg",sheet());
+render();
 </script>
 </body>
 </html>
