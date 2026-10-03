@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Studio ikon dan latar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;color-scheme:light;--bg:#E8E6F0;--panel:#fff;--ink:#221F35;--mute:#6B6784;--line:#D8D4E6;--acc:#D63A66;--accink:#fff;--stage:#DCD8EA;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#17151F;--panel:#221F2E;--ink:#ECEAF5;--mute:#9E99B8;--line:#383350;--acc:#FF6F94;--accink:#2A1020;--stage:#1D1A28}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#17151F;--panel:#221F2E;--ink:#ECEAF5;--mute:#9E99B8;--line:#383350;--acc:#FF6F94;--accink:#2A1020;--stage:#1D1A28}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Bricolage Grotesque",system-ui,sans-serif}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:20px clamp(16px,4vw,40px) 8px}
+h1{margin:0;font-size:clamp(22px,4vw,30px);font-weight:650;letter-spacing:-.02em}
+.seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;color:var(--mute);font:inherit;padding:8px 20px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;padding:12px clamp(16px,4vw,40px) 40px;align-items:start}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+@media(min-width:861px){.left{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
+.stage{background:var(--stage);border-radius:20px;padding:clamp(14px,3vw,26px)}
+.big{display:grid;place-items:center;padding:22px;border-radius:14px;background:conic-gradient(var(--line) 25%,transparent 0 50%,var(--line) 0 75%,transparent 0) 0 0/16px 16px}
+.big img{width:min(240px,60vw);height:auto;display:block}
+.ctx{display:flex;flex-wrap:wrap;gap:18px 22px;align-items:flex-end;margin-top:18px}
+.chrome{flex:1 1 220px;background:var(--line);border-radius:10px 10px 0 0;padding:8px 8px 0}
+.tab{display:flex;align-items:center;gap:8px;background:var(--panel);border-radius:8px 8px 0 0;padding:8px 12px;font-size:13px;max-width:240px}
+.tab img{width:16px;height:16px;flex:none}
+.tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addr{background:var(--panel);height:28px}
+.tile{width:72px;text-align:center;font-size:12px;color:var(--mute)}
+.tile img{width:72px;height:72px;border-radius:16px;display:block;margin-bottom:4px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.sz{display:flex;gap:12px;align-items:flex-end}
+.sz figure{margin:0;text-align:center;font-size:11px;color:var(--mute)}
+.sz img{display:block;margin:0 auto 4px}
+#pBg{display:block;margin:0 auto;height:auto;border-radius:10px;max-width:100%}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:14px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+button.b{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;border-radius:10px;font:inherit;cursor:pointer}
+button.pri{background:var(--acc);color:var(--accink);border-color:transparent;font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+textarea{width:100%;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical;margin-bottom:8px}
+.note{margin:6px 0 0;font-size:13px;color:var(--mute)}
+.palbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.grp{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.grp h3{margin:0 0 10px;font-size:15px;font-weight:650}
+.gg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row{grid-column:1/-1}
+.row[data-t=color]{grid-column:auto}
+.row label,.lab{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-bottom:4px}
+.row output{color:var(--ink)}
+.row label.chk{display:flex;justify-content:flex-start;gap:8px;color:var(--ink);align-items:center}
+input[type=range]{width:100%;accent-color:var(--acc);margin:6px 0 0}
+input[type=color]{width:100%;height:38px;border:1px solid var(--line);border-radius:10px;padding:2px;background:var(--panel)}
+.row input[type=text],.row select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:13px;padding:6px 11px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 16%,transparent)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;z-index:9}
+</style>
+</head>
+<body>
+<header>
+  <h1>Studio ikon dan latar</h1>
+  <div class="seg" role="group" aria-label="Pilih alat">
+    <button id="mI" type="button" aria-pressed="true">Ikon web</button>
+    <button id="mB" type="button" aria-pressed="false">Latar</button>
+  </div>
+</header>
+<main>
+  <div class="left">
+    <div class="stage" id="stI">
+      <div class="big"><img class="pi" alt="Pratinjau ikon"></div>
+      <div class="ctx">
+        <div class="chrome"><div class="tab"><img class="pi" alt=""><span>Beranda - Situs Anda</span></div><div class="addr"></div></div>
+        <div class="tile"><img class="pi" alt="">Aplikasi</div>
+        <div class="sz">
+          <figure><img class="pi" width="16" height="16" alt="">16</figure>
+          <figure><img class="pi" width="32" height="32" alt="">32</figure>
+          <figure><img class="pi" width="48" height="48" alt="">48</figure>
+          <figure><img class="pi" width="64" height="64" alt="">64</figure>
+        </div>
+      </div>
+    </div>
+    <div class="stage" id="stB" hidden><img id="pBg" alt="Pratinjau latar"></div>
+
+    <section class="card" id="expI">
+      <span class="lab">Ukuran PNG (piksel)</span>
+      <div class="chips" id="szChips"></div>
+      <div class="btns">
+        <button class="b pri dl" id="dPng" type="button" disabled>Unduh PNG</button>
+        <button class="b dl" id="dSvg" type="button" disabled>Unduh SVG</button>
+      </div>
+      <textarea id="codeI" rows="8" wrap="off" readonly spellcheck="false" aria-label="Kode HTML ikon"></textarea>
+      <button class="b" id="cpI" type="button">Salin kode</button>
+      <p class="note">Unduh PNG 32, 180, 192, dan 512 piksel. Nama berkas otomatis cocok dengan kode di atas.</p>
+    </section>
+
+    <section class="card" id="expB" hidden>
+      <div class="btns" style="margin-top:0">
+        <button class="b pri dl" id="dPngB" type="button" disabled>Unduh PNG</button>
+        <button class="b dl" id="dSvgB" type="button" disabled>Unduh SVG</button>
+        <button class="b" id="cpB" type="button">Salin CSS</button>
+      </div>
+      <textarea id="codeB" rows="9" wrap="off" readonly spellcheck="false" aria-label="Kode CSS latar"></textarea>
+    </section>
+    <p class="note" id="note"></p>
+  </div>
+
+  <aside>
+    <div class="palbar"><span class="lab" style="margin:0">Palet</span><span id="pal" style="display:contents"></span><button class="b" id="rnd" type="button">Acak</button></div>
+    <div id="ctl"></div>
+  </aside>
+</main>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>t.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+const uri=s=>'data:image/svg+xml,'+encodeURIComponent(s);
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const lum=h=>{const n=parseInt(h.slice(1),16);return(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255};
+
+const PALETTES=[['Senja',['#FF9A5A','#FF4D79','#7B2FF7','#2D1B69']],['Laut',['#00C9FF','#3A7BFF','#4C2FDB','#0B1B4D']],['Rimba',['#C8F169','#3BC47A','#0E7C66','#073B3A']],['Permen',['#FFD1F0','#C7B8FF','#8FD3FF','#B6F5D8']],['Malam',['#6C4BFF','#3B2F63','#231B45','#120E2B']],['Fajar',['#FFE29A','#FFA8A8','#C9A7FF','#8EC5FF']],['Batu',['#E6E9EF','#AEB6C7','#6A7490','#2A3045']],['Kopi',['#F3D9B1','#C98B5B','#7A4A2E','#2E1B12']]];
+const FONTS={sans:"ui-sans-serif,system-ui,'Segoe UI',Arial,sans-serif",serif:"Georgia,'Times New Roman',serif",mono:"ui-monospace,Menlo,Consolas,monospace",rounded:"ui-rounded,'Hiragino Maru Gothic ProN',Nunito,sans-serif"};
+const SHAPES={star:'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z',heart:'M12 21C12 21 3 15.5 3 9.5A4.5 4.5 0 0 1 12 7.5 4.5 4.5 0 0 1 21 9.5C21 15.5 12 21 12 21z',bolt:'M13 2L4 14h6l-1 8 9-12h-6z',ring:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10z',play:'M7 4l13 8-13 8z',plus:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z'};
+
+const S={mode:'icon',
+ icon:{radius:120,bgt:'grad',c1:'#FF9A5A',c2:'#7B2FF7',angle:135,gt:'text',text:'🚀',font:'sans',weight:800,shape:'star',gc:'#ffffff',gs:56,gx:0,gy:0,rot:0,shadow:true},
+ bg:{type:'mesh',n:4,c1:'#FF9A5A',c2:'#FF4D79',c3:'#7B2FF7',c4:'#2D1B69',angle:135,seed:7,pat:'none',pc:'#ffffff',po:35,psz:32,noise:25,size:'1920x1080'}};
+
+const ICON=[
+ {t:'Bentuk',f:[
+  {k:'radius',t:'range',l:'Sudut membulat',min:0,max:256},
+  {k:'radius',t:'chips',o:[['Kotak',0],['Squircle',120],['Bulat',256]]}]},
+ {t:'Latar ikon',f:[
+  {k:'bgt',t:'chips',o:[['Gradasi','grad'],['Warna polos','solid'],['Transparan','none']]},
+  {k:'c1',t:'color',l:'Warna 1',if:s=>s.bgt!='none'},
+  {k:'c2',t:'color',l:'Warna 2',if:s=>s.bgt=='grad'},
+  {k:'angle',t:'range',l:'Sudut gradasi',min:0,max:360,u:'°',if:s=>s.bgt=='grad'}]},
+ {t:'Isi ikon',f:[
+  {k:'gt',t:'chips',o:[['Emoji atau teks','text'],['Bentuk','shape'],['Kosong','none']]},
+  {k:'text',t:'text',l:'Karakter',if:s=>s.gt=='text'},
+  {k:'font',t:'select',l:'Huruf',o:[['Sans','sans'],['Serif','serif'],['Mono','mono'],['Bulat','rounded']],if:s=>s.gt=='text'},
+  {k:'weight',t:'chips',o:[['Tebal',800],['Normal',400]],if:s=>s.gt=='text'},
+  {k:'shape',t:'chips',o:[['Bintang','star'],['Hati','heart'],['Petir','bolt'],['Cincin','ring'],['Putar','play'],['Tambah','plus']],if:s=>s.gt=='shape'},
+  {k:'gc',t:'color',l:'Warna isi',if:s=>s.gt!='none'},
+  {k:'gs',t:'range',l:'Ukuran',min:10,max:100,u:'%',if:s=>s.gt!='none'},
+  {k:'gx',t:'range',l:'Geser mendatar',min:-40,max:40,if:s=>s.gt!='none'},
+  {k:'gy',t:'range',l:'Geser tegak',min:-40,max:40,if:s=>s.gt!='none'},
+  {k:'rot',t:'range',l:'Putar',min:-180,max:180,u:'°',if:s=>s.gt!='none'},
+  {k:'shadow',t:'check',l:'Bayangan di bawah isi',if:s=>s.gt!='none'}]}];
+const BG=[
+ {t:'Warna latar',f:[
+  {k:'type',t:'chips',o:[['Gradasi garis','linear'],['Gradasi radial','radial'],['Mesh','mesh']]},
+  {k:'n',t:'chips',l:'Jumlah warna',o:[['2',2],['3',3],['4',4]]},
+  {k:'c1',t:'color',l:'Warna 1'},{k:'c2',t:'color',l:'Warna 2'},
+  {k:'c3',t:'color',l:'Warna 3',if:s=>s.n>2},{k:'c4',t:'color',l:'Warna 4',if:s=>s.n>3},
+  {k:'angle',t:'range',l:'Sudut',min:0,max:360,u:'°',if:s=>s.type=='linear'},
+  {k:'seed',t:'range',l:'Posisi bercak warna',min:1,max:99,if:s=>s.type=='mesh'}]},
+ {t:'Pola',f:[
+  {k:'pat',t:'chips',o:[['Tanpa','none'],['Titik','dots'],['Kotak','grid'],['Garis','lines'],['Gelombang','waves']]},
+  {k:'pc',t:'color',l:'Warna pola',if:s=>s.pat!='none'},
+  {k:'po',t:'range',l:'Kepekatan',min:5,max:100,u:'%',if:s=>s.pat!='none'},
+  {k:'psz',t:'range',l:'Ukuran pola',min:12,max:96,u:' px',if:s=>s.pat!='none'}]},
+ {t:'Tekstur dan ukuran',f:[
+  {k:'noise',t:'range',l:'Butiran halus',min:0,max:100,u:'%'},
+  {k:'size',t:'select',l:'Ukuran ekspor',o:[['Desktop 1920×1080','1920x1080'],['Desktop 2560×1440','2560x1440'],['4K 3840×2160','3840x2160'],['Ponsel 1080×1920','1080x1920'],['Gambar sosial 1200×630','1200x630'],['Persegi 1080×1080','1080x1080']]}]}];
+
+/* ---------- SVG builders ---------- */
+function lin(a,w,h){const t=a*Math.PI/180,dx=Math.sin(t),dy=-Math.cos(t),L=Math.abs(w*dx)+Math.abs(h*dy),cx=w/2,cy=h/2,f=n=>n.toFixed(1);return `x1="${f(cx-dx*L/2)}" y1="${f(cy-dy*L/2)}" x2="${f(cx+dx*L/2)}" y2="${f(cy+dy*L/2)}"`}
+const stops=cs=>cs.map((c,i)=>`<stop offset="${(i/(cs.length-1)).toFixed(3)}" stop-color="${c}"/>`).join('');
+
+function iconSvg(s,size){
+ const r=Math.min(s.radius,256);let defs='',fill='none',g='';
+ if(s.bgt=='grad'){defs+=`<linearGradient id="g" gradientUnits="userSpaceOnUse" ${lin(s.angle,512,512)}>${stops([s.c1,s.c2])}</linearGradient>`;fill='url(#g)'}
+ else if(s.bgt=='solid')fill=s.c1;
+ if(s.gt!='none'){
+  const tf=`translate(${256+s.gx*5.12} ${256+s.gy*5.12}) rotate(${s.rot})`;
+  let fl='';
+  if(s.shadow){defs+='<filter id="sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".28"/></filter>';fl=' filter="url(#sh)"'}
+  if(s.gt=='text')g=`<text transform="${tf}" text-anchor="middle" dy=".35em" font-size="${(s.gs*5.12).toFixed(1)}" font-family="${esc(FONTS[s.font])}" font-weight="${s.weight}" fill="${s.gc}"${fl}>${esc(s.text)}</text>`;
+  else g=`<path transform="${tf} scale(${(s.gs*5.12/24).toFixed(3)}) translate(-12 -12)" d="${SHAPES[s.shape]}" fill="${s.gc}" fill-rule="evenodd"${fl}/>`;
+ }
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="${size}" height="${size}"><defs>${defs}</defs><rect width="512" height="512" rx="${r}" fill="${fill}"/>${g}</svg>`;
+}
+
+const bgCols=s=>[s.c1,s.c2,s.c3,s.c4].slice(0,s.n);
+function blobs(s){const r=rng(s.seed*7919);return bgCols(s).map(c=>({c,x:Math.round(r()*100),y:Math.round(r()*100)}))}
+function patShape(s){const z=s.psz,c=s.pc,o=s.po/100,a=`stroke="${c}" stroke-opacity="${o}" fill="none"`;
+ if(s.pat=='dots')return `<circle cx="${z/2}" cy="${z/2}" r="${(z*.09).toFixed(1)}" fill="${c}" fill-opacity="${o}"/>`;
+ if(s.pat=='grid')return `<path d="M${z} 0H0V${z}" ${a} stroke-width="1.5"/>`;
+ if(s.pat=='lines')return `<path d="M0 ${z}L${z} 0M${-z/2} ${z/2}L${z/2} ${-z/2}M${z/2} ${z*1.5}L${z*1.5} ${z/2}" ${a} stroke-width="${Math.max(1.5,z*.06).toFixed(1)}"/>`;
+ return `<path d="M0 ${z/2}Q${z/4} 0 ${z/2} ${z/2}T${z} ${z/2}" ${a} stroke-width="2"/>`;
+}
+const patTile=s=>`<svg xmlns="http://www.w3.org/2000/svg" width="${s.psz}" height="${s.psz}">${patShape(s)}</svg>`;
+const NF='<filter id="n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>';
+const nop=s=>(s.noise/100*.4).toFixed(2);
+const noiseTile=s=>`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">${NF}<rect width="200" height="200" filter="url(#n)" opacity="${nop(s)}"/></svg>`;
+
+function bgSvg(s,w,h,ow,oh){
+ const cs=bgCols(s);let defs='',body='';
+ if(s.type=='linear'){defs=`<linearGradient id="g" gradientUnits="userSpaceOnUse" ${lin(s.angle,w,h)}>${stops(cs)}</linearGradient>`;body=`<rect width="${w}" height="${h}" fill="url(#g)"/>`}
+ else if(s.type=='radial'){defs=`<radialGradient id="g" gradientUnits="userSpaceOnUse" cx="${w/2}" cy="${h/2}" r="${(Math.hypot(w,h)/2).toFixed(1)}">${stops(cs)}</radialGradient>`;body=`<rect width="${w}" height="${h}" fill="url(#g)"/>`}
+ else{const bl=blobs(s);
+  defs=bl.map((b,i)=>`<radialGradient id="m${i}" cx="${b.x/100}" cy="${b.y/100}" r=".6"><stop offset="0" stop-color="${b.c}"/><stop offset="1" stop-color="${b.c}" stop-opacity="0"/></radialGradient>`).join('');
+  body=`<rect width="${w}" height="${h}" fill="${cs[0]}"/>`+bl.map((b,i)=>`<rect width="${w}" height="${h}" fill="url(#m${i})"/>`).join('')}
+ if(s.pat!='none'){defs+=`<pattern id="p" width="${s.psz}" height="${s.psz}" patternUnits="userSpaceOnUse">${patShape(s)}</pattern>`;body+=`<rect width="${w}" height="${h}" fill="url(#p)"/>`}
+ if(s.noise>0){defs+=NF;body+=`<rect width="${w}" height="${h}" filter="url(#n)" opacity="${nop(s)}"/>`}
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${ow}" height="${oh}"><defs>${defs}</defs>${body}</svg>`;
+}
+function bgCss(s){
+ const cs=bgCols(s),L=[],Z=[];let bc='';
+ if(s.noise>0){L.push(`url("${uri(noiseTile(s))}")`);Z.push('200px 200px')}
+ if(s.pat!='none'){L.push(`url("${uri(patTile(s))}")`);Z.push(`${s.psz}px ${s.psz}px`)}
+ if(s.type=='linear'){L.push(`linear-gradient(${s.angle}deg, ${cs.join(', ')})`);Z.push('auto')}
+ else if(s.type=='radial'){L.push(`radial-gradient(circle at center, ${cs.join(', ')})`);Z.push('auto')}
+ else{[...blobs(s)].reverse().forEach(b=>{L.push(`radial-gradient(ellipse 60% 60% at ${b.x}% ${b.y}%, ${b.c}, transparent)`);Z.push('auto')});bc=`background-color: ${cs[0]};\n`}
+ return `${bc}background-image:\n  ${L.join(',\n  ')};\nbackground-size: ${Z.join(', ')};`;
+}
+
+/* ---------- controls ---------- */
+let ctl=[];
+function build(){
+ const host=$('#ctl'),schema=S.mode=='icon'?ICON:BG;ctl=[];
+ host.innerHTML=schema.map(g=>`<section class="grp"><h3>${g.t}</h3><div class="gg">${g.f.map(f=>{
+  const i=ctl.push({f})-1,id='c'+i;let h;
+  if(f.t=='range')h=`<label for="${id}">${f.l}<output></output></label><input id="${id}" type="range" min="${f.min}" max="${f.max}">`;
+  else if(f.t=='color')h=`<label for="${id}">${f.l}</label><input id="${id}" type="color">`;
+  else if(f.t=='text')h=`<label for="${id}">${f.l}</label><input id="${id}" type="text" maxlength="8" autocomplete="off">`;
+  else if(f.t=='select')h=`<label for="${id}">${f.l}</label><select id="${id}">${f.o.map(([n,v])=>`<option value="${v}">${n}</option>`).join('')}</select>`;
+  else if(f.t=='check')h=`<label class="chk"><input id="${id}" type="checkbox">${f.l}</label>`;
+  else h=(f.l?`<span class="lab">${f.l}</span>`:'')+`<div class="chips">${f.o.map(([n],j)=>`<button type="button" data-j="${j}">${n}</button>`).join('')}</div>`;
+  return `<div class="row" data-i="${i}" data-t="${f.t}">${h}</div>`}).join('')}</div></section>`).join('');
+ ctl.forEach((c,i)=>{c.row=host.querySelector(`.row[data-i="${i}"]`);c.el=c.row.querySelector('input,select')});
+}
+function sync(){
+ const st=S[S.mode];
+ ctl.forEach(({f,row,el})=>{
+  row.hidden=!!(f.if&&!f.if(st));
+  const v=st[f.k];
+  if(f.t=='chips')row.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-pressed',f.o[j][1]===v));
+  else if(f.t=='check')el.checked=v;
+  else{el.value=v;if(f.t=='range')row.querySelector('output').textContent=v+(f.u||'')}
+ });
+}
+$('#ctl').addEventListener('input',e=>{
+ const r=e.target.closest('.row');if(!r)return;
+ const f=ctl[r.dataset.i].f,el=e.target;
+ S[S.mode][f.k]=f.t=='range'?+el.value:f.t=='check'?el.checked:el.value;update();
+});
+$('#ctl').addEventListener('click',e=>{
+ const b=e.target.closest('button[data-j]');if(!b)return;
+ const f=ctl[b.closest('.row').dataset.i].f;
+ S[S.mode][f.k]=f.o[b.dataset.j][1];update();
+});
+
+/* ---------- palettes ---------- */
+$('#pal').innerHTML=PALETTES.map(([n,c],i)=>`<button type="button" class="sw" data-i="${i}" title="${n}" aria-label="Palet ${n}" style="background:linear-gradient(135deg,${c.join(',')})"></button>`).join('');
+function applyPal(c){
+ if(S.mode=='icon'){const s=S.icon;s.c1=c[0];s.c2=c[2];s.gc=(lum(c[0])+lum(c[2]))/2>.62?'#221F35':'#ffffff'}
+ else Object.assign(S.bg,{c1:c[0],c2:c[1],c3:c[2],c4:c[3]});
+ update();
+}
+$('#pal').addEventListener('click',e=>{const b=e.target.closest('.sw');if(b)applyPal(PALETTES[b.dataset.i][1])});
+$('#rnd').onclick=()=>{
+ const p=PALETTES[Math.random()*PALETTES.length|0][1].slice();if(Math.random()<.5)p.reverse();
+ applyPal(p);
+ if(S.mode=='icon')S.icon.angle=Math.random()*360|0;else{S.bg.seed=1+Math.random()*98|0;S.bg.angle=Math.random()*360|0}
+ update();
+};
+
+/* ---------- output ---------- */
+const ICODE=['<link rel="icon" href="/favicon.svg" type="image/svg+xml">','<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">','<link rel="apple-touch-icon" href="/apple-touch-icon.png">','<link rel="manifest" href="/manifest.json">','','manifest.json:','{"icons":[{"src":"/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"/icon-512.png","sizes":"512x512","type":"image/png"}]}'].join('\n');
+const SZ=[16,32,48,64,128,180,192,256,512,1024];let px=512;
+const fname=n=>n==32?'favicon-32.png':n==180?'apple-touch-icon.png':`icon-${n}.png`;
+const bgDim=()=>S.bg.size.split('x').map(Number);
+function update(){
+ sync();
+ if(S.mode=='icon'){
+  const u=uri(iconSvg(S.icon,512));
+  document.querySelectorAll('.pi').forEach(i=>i.src=u);
+  $('#codeI').value=ICODE;
+  $('#dPng').textContent=`Unduh PNG ${px} px`;
+  $('#szChips').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n===px));
+ }else{
+  const s=S.bg,[w,h]=bgDim(),im=$('#pBg'),pw=1000,ph=Math.round(pw*h/w);
+  im.src=uri(bgSvg(s,w,h,pw,ph));
+  im.style.width=`min(100%, ${(56*w/h).toFixed(1)}vh)`;
+  $('#codeB').value=bgCss(s);
+  $('#dPngB').textContent=`Unduh PNG ${w}×${h}`;
+ }
+}
+$('#szChips').innerHTML=SZ.map(n=>`<button type="button" data-n="${n}">${n}</button>`).join('');
+$('#szChips').addEventListener('click',e=>{const b=e.target.closest('button');if(b){px=+b.dataset.n;update()}});
+
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800)}
+let dl=null;
+async function save(name,data){
+ if(!dl)return toast('Unduhan belum tersedia.');
+ try{const r=await dl.save({filename:name,data});toast(r.status=='saved'?`Tersimpan: ${name}`:'Berkas dikirim.')}
+ catch(e){if(e&&e.code!='declined')toast(`Gagal menyimpan (${(e&&e.code)||'galat'}).`)}
+}
+const png=(svg,w,h)=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(i,0,0,w,h);c.toBlob(b=>b?res(b):rej(new Error('kosong')),'image/png')};i.onerror=rej;i.src=uri(svg)});
+async function pngSave(name,svg,w,h){let b;try{b=await png(svg,w,h)}catch(e){return toast('Gagal membuat PNG. Coba ukuran lebih kecil.')}await save(name,b)}
+
+$('#dPng').onclick=()=>pngSave(fname(px),iconSvg(S.icon,px),px,px);
+$('#dSvg').onclick=()=>save('favicon.svg',iconSvg(S.icon,512));
+$('#dPngB').onclick=()=>{const[w,h]=bgDim();pngSave(`latar-${w}x${h}.png`,bgSvg(S.bg,w,h,w,h),w,h)};
+$('#dSvgB').onclick=()=>{const[w,h]=bgDim();save(`latar-${w}x${h}.svg`,bgSvg(S.bg,w,h,w,h))};
+async function copy(ta){
+ try{await navigator.clipboard.writeText(ta.value);toast('Tersalin')}
+ catch(e){ta.focus();ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}toast(ok?'Tersalin':'Teks sudah dipilih, salin secara manual.')}
+}
+$('#cpI').onclick=()=>copy($('#codeI'));
+$('#cpB').onclick=()=>copy($('#codeB'));
+
+(async()=>{
+ let d=null;try{d=window.claude&&await claude.use('downloads')}catch(e){}
+ dl=d;document.querySelectorAll('.dl').forEach(b=>b.disabled=!d);
+ if(!d)$('#note').textContent='Unduhan tidak tersedia di tampilan ini. Gunakan tombol salin kode.';
+})();
+
+function setMode(m){
+ S.mode=m;
+ $('#mI').setAttribute('aria-pressed',m=='icon');$('#mB').setAttribute('aria-pressed',m=='bg');
+ $('#stI').hidden=$('#expI').hidden=m!='icon';$('#stB').hidden=$('#expB').hidden=m!='bg';
+ build();update();
+}
+$('#mI').onclick=()=>setMode('icon');$('#mB').onclick=()=>setMode('bg');
+setMode('icon');
+</script>
+</body>
+</html>
